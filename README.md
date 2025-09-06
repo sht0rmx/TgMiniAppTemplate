@@ -39,6 +39,9 @@ lib for communicate with _TelegramApi_: **PyTelegramBotApi**
 - Docker based system for automatisation build process
 - Support VueJs Router
 - Base App Example with themes
+- mutlilanguage messages in bot
+- plugin system
+- global logging `modules.logging.logger`
 
 ## Requirements
 
@@ -70,32 +73,32 @@ finally run:
 
 #### Dev Prepare
 
-0. register bot in BotFather and get api key
-1. copy this repo `git clone https://github.com/sht0rmx/MiniAppTemplate` **(if you deploy your project, replace link to your app repo link)**
-2. run VSCode and open `MiniAppTemplate` **(dont open VSC for pruduction deploy prepare)**
-3. run console `Ctrl+J` in IDE window **(skip 1-3 steps for pruduction)**
+1. register bot in BotFather and get api key
+2. copy this repo `git clone https://github.com/sht0rmx/MiniAppTemplate` **(if you deploy your project, replace link to your app repo link)**
+3. run VSCode and open `MiniAppTemplate` **(dont open VSC for pruduction deploy prepare)**
+4. run console `Ctrl+J` in IDE window **(skip 1-3 steps for pruduction)**
    1. open `ports` tab and click **forward port** (ex: 5173 & 8090)
    2. change privacy of this ports to **public**
    3. remember link for this ports
    4. setup **miniapp button** and **miniapp** in BotFather with url of forwarded **5173** port (for production paste link to runed pocketbase instance base port 5432)
    - port forward need recreate with every restart of VSC instance **(dont worry url will be keepd ~within the 1st month)**
-4. open pocketbase dir `cd pocketbase`
+5. open pocketbase dir `cd pocketbase`
    1. download release for your system [PocketBase](https://github.com/pocketbase/pocketbase/releases/tag/v0.29.3)
    2. copy executable into **./pocketbase/** folder
    3. run binary file
       - win: `./pocketbase.exe serve`
       - linux: `./pocketbase serve`
    4. open link from console and register root account
-   5. in admin panel open **env** collection and insert record `key: "BOT_TOKEN" value: "bot api key from 1 step"` and save collection
+   5. in admin panel open **env** collection and insert record `bot token: {api key} default_lang: N/A` and save collection
    - run command `nmp run dev` **(on dev stage)**
-5. open frontend dir `cd frontend` **(skip 5th step for pruduction)**
-   1. run `npm install` (or your NodeJS pkg manager install command)
+6. open frontend dir `cd frontend` **(skip 5th step for pruduction)**
+   1. run `npm install` (or your Node.js pkg manager install command)
    2. copy **.env.example** as **.env**
    3. paste forward 8090 port url to **VITE_POCKETBASE_URL**
    4. **TG_MINIAPP_START** insert the link for start bot miniapp in format `http://t.me/botusername/?startapp`
    5. run vite server with autoreload with `nmp run dev`
    - run command `nmp run dev` **(on dev stage)**
-6. open bot directory `cd bot`
+7. open bot directory `cd bot`
    1. create virtual enviroment by command:
       - win: `python -m venv .venv`
       - linux: `python3 -m venv .venv`
@@ -110,6 +113,59 @@ finally run:
       - win: `python ./main.py`
       - linux: `python3 ./main.py`
 
+
+## Prerun steps
+
+### Multilanguage messages
+
+in first start will be created default language in `lang` collection
+you can edit messages in admin db!
+for get translation and markup `modules.bot_funcs.get_data`
+
+### Plugins System
+
+- create record in any collection that ends with **'_handlers'**
+   - example record: 
+     - `name`: `start command`
+     - `description`: `send user message with id 'message-id'`
+     - `commands`: `/start,/hello`
+     - `plugin`: `plugins/cmd/start` (`plugin` - folder in root dir with main.py, `cmd` - folder, `start` - file `start.py` with function ` main(plug: modules.plugins.CommandPlugin)` and argument plug (more details in `modules.plugins.Plugin`)) 
+     - `enabled`: `true`
+   - `modules.plugins.*Plugin` fields:
+     - `chat_id` (exclude inline `int`)
+     - `user_id` (exclude callback `int`)
+     - `msg` (exclude inline `types.Message`)
+     - `text` (query text: only inline `str`)
+     - `inline_data` (`types.InlineQuery`)
+     - `command_text` (only command `str`)
+     - `callback_args` (only callback `list`)
+     - `callback_data` (only callback `types.CallbackQuery`)
+     - `bot` (`TeleBot`)
+     - `dbclient` (`PocketBaseClient`)
+     - `translations` (`TranslationsManager`)
+
+### PluginFeatures
+
+   - `modules.bot_funcs.get_data`
+      - `message`: `types.Message`
+      - `msg_id`: `str`
+      - `only_txt`: `bool = False`
+      - -> `Union[Tuple[str, Optional[Union[types.ReplyKeyboardMarkup, types.InlineKeyboardMarkup]]], str]`
+   - `modules.bot_funcs.ask`
+     - `message`: `types.Message`
+     - -> `bool` (if yes - true, if no - false)
+   - `modules.bot_funcs.next_step` (alias to `modules.bot_funcs.ask`) 
+   - `modules.bot_funcs.auto_delete`
+     - `message`: `types.Message`
+     - `delay`: `int = 0`
+     - -> `None`
+
+## TO-DO
+
+- [ ] Rewrite with PostgresSql and add backend on fastapi
+- [ ] Rewrite bot with AioGram with asyncio
+
 ## Thanks
 
-created by @shtormx with help from @dima0409 in 2025y
+created by @sht0rmx with help from @dima0409 in 2025y
+

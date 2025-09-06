@@ -606,18 +606,6 @@ migrate((app) => {
           "type": "text"
         },
         {
-          "hidden": false,
-          "id": "number3423285350",
-          "max": null,
-          "min": null,
-          "name": "telegram_id",
-          "onlyInt": false,
-          "presentable": false,
-          "required": true,
-          "system": false,
-          "type": "number"
-        },
-        {
           "cost": 0,
           "hidden": true,
           "id": "password901924565",
@@ -656,6 +644,65 @@ migrate((app) => {
           "type": "email"
         },
         {
+          "autogeneratePattern": "",
+          "hidden": false,
+          "id": "text4166911607",
+          "max": 0,
+          "min": 0,
+          "name": "username",
+          "pattern": "",
+          "presentable": false,
+          "primaryKey": false,
+          "required": false,
+          "system": false,
+          "type": "text"
+        },
+        {
+          "hidden": false,
+          "id": "number3423285350",
+          "max": null,
+          "min": null,
+          "name": "telegram_id",
+          "onlyInt": false,
+          "presentable": false,
+          "required": true,
+          "system": false,
+          "type": "number"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "pbc_1942321168",
+          "hidden": false,
+          "id": "relation822707298",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "lang",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "hidden": false,
+          "id": "date846843460",
+          "max": "",
+          "min": "",
+          "name": "last_seen",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "date"
+        },
+        {
+          "hidden": false,
+          "id": "bool2282622326",
+          "name": "admin",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "bool"
+        },
+        {
           "hidden": false,
           "id": "bool1547992806",
           "name": "emailVisibility",
@@ -674,18 +721,15 @@ migrate((app) => {
           "type": "bool"
         },
         {
-          "autogeneratePattern": "",
+          "exceptDomains": null,
           "hidden": false,
-          "id": "text4166911607",
-          "max": 0,
-          "min": 0,
-          "name": "username",
-          "pattern": "",
+          "id": "url2190673250",
+          "name": "avatar_url",
+          "onlyDomains": null,
           "presentable": false,
-          "primaryKey": false,
           "required": false,
           "system": false,
-          "type": "text"
+          "type": "url"
         },
         {
           "autogeneratePattern": "",
@@ -700,28 +744,6 @@ migrate((app) => {
           "required": false,
           "system": false,
           "type": "text"
-        },
-        {
-          "exceptDomains": null,
-          "hidden": false,
-          "id": "url2190673250",
-          "name": "avatar_url",
-          "onlyDomains": null,
-          "presentable": false,
-          "required": false,
-          "system": false,
-          "type": "url"
-        },
-        {
-          "hidden": false,
-          "id": "date846843460",
-          "max": "",
-          "min": "",
-          "name": "last_seen",
-          "presentable": false,
-          "required": false,
-          "system": false,
-          "type": "date"
         },
         {
           "hidden": false,
@@ -828,7 +850,7 @@ migrate((app) => {
           "id": "text2324736937",
           "max": 0,
           "min": 0,
-          "name": "key",
+          "name": "bot_token",
           "pattern": "",
           "presentable": false,
           "primaryKey": false,
@@ -837,78 +859,23 @@ migrate((app) => {
           "type": "text"
         },
         {
-          "autogeneratePattern": "",
+          "cascadeDelete": false,
+          "collectionId": "pbc_1942321168",
           "hidden": false,
-          "id": "text494360628",
-          "max": 0,
-          "min": 0,
-          "name": "value",
-          "pattern": "",
+          "id": "relation1962458980",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "default_lang",
           "presentable": false,
-          "primaryKey": false,
           "required": false,
           "system": false,
-          "type": "text"
+          "type": "relation"
         }
       ],
       "id": "pbc_2569223347",
       "indexes": [],
       "listRule": null,
       "name": "env",
-      "system": false,
-      "type": "base",
-      "updateRule": null,
-      "viewRule": null
-    },
-    {
-      "createRule": null,
-      "deleteRule": null,
-      "fields": [
-        {
-          "autogeneratePattern": "[a-z0-9]{15}",
-          "hidden": false,
-          "id": "text3208210256",
-          "max": 15,
-          "min": 15,
-          "name": "id",
-          "pattern": "^[a-z0-9]+$",
-          "presentable": false,
-          "primaryKey": true,
-          "required": true,
-          "system": true,
-          "type": "text"
-        },
-        {
-          "cascadeDelete": false,
-          "collectionId": "_pb_users_auth_",
-          "hidden": false,
-          "id": "relation2375276105",
-          "maxSelect": 1,
-          "minSelect": 0,
-          "name": "user",
-          "presentable": false,
-          "required": false,
-          "system": false,
-          "type": "relation"
-        },
-        {
-          "cascadeDelete": false,
-          "collectionId": "pbc_1942321168",
-          "hidden": false,
-          "id": "relation822707298",
-          "maxSelect": 1,
-          "minSelect": 0,
-          "name": "lang",
-          "presentable": false,
-          "required": false,
-          "system": false,
-          "type": "relation"
-        }
-      ],
-      "id": "pbc_2769025244",
-      "indexes": [],
-      "listRule": null,
-      "name": "settings",
       "system": false,
       "type": "base",
       "updateRule": null,
@@ -1349,55 +1316,6 @@ migrate((app) => {
       "indexes": [],
       "listRule": null,
       "name": "inline_handlers",
-      "system": false,
-      "type": "base",
-      "updateRule": null,
-      "viewRule": null
-    },
-    {
-      "createRule": null,
-      "deleteRule": null,
-      "fields": [
-        {
-          "autogeneratePattern": "[a-z0-9]{15}",
-          "hidden": false,
-          "id": "text3208210256",
-          "max": 15,
-          "min": 15,
-          "name": "id",
-          "pattern": "^[a-z0-9]+$",
-          "presentable": false,
-          "primaryKey": true,
-          "required": true,
-          "system": true,
-          "type": "text"
-        },
-        {
-          "hidden": false,
-          "id": "date1542800728",
-          "max": "",
-          "min": "",
-          "name": "datetime",
-          "presentable": false,
-          "required": false,
-          "system": false,
-          "type": "date"
-        },
-        {
-          "hidden": false,
-          "id": "json1482792627",
-          "maxSize": 0,
-          "name": "log_part",
-          "presentable": false,
-          "required": false,
-          "system": false,
-          "type": "json"
-        }
-      ],
-      "id": "pbc_3615662572",
-      "indexes": [],
-      "listRule": null,
-      "name": "logs",
       "system": false,
       "type": "base",
       "updateRule": null,

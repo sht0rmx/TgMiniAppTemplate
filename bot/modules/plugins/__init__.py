@@ -1,4 +1,7 @@
-from modules import bot_funcs
+from telebot import TeleBot
+from telebot.types import Message
+
+from modules import bot
 
 import importlib
 import os
@@ -6,7 +9,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from pocketbase.models import Record
-from modules.db import dbclient
+from modules.db import dbclient, PocketBaseClient
 from modules.logging import logger
 
 class TranslationManager:
@@ -18,17 +21,26 @@ class TranslationManager:
     def cash_translations(self):
         self.cash = self.client.get_all_translations()
 
-    def t(self, uid, key:str):
-        lang = self.client.get_lang(uid)
+    def t(self, message: Message, key:str):
+        lang = self.client.get_lang(message)
         keylist = key.split('/')
 
-        result = self.cash.get(lang)
+        lang_data = self.cash.get(lang).get('data')
+        if not lang_data:
+            return "LangNotFound"
+
+        result = None
+
         for key in keylist:
-            result = result.get(key, None)
+            result = lang_data.get(key, None)
 
             if result is None:
-                raise Exception(f"{key} not found")
+                raise Exception(f"key {key} not found")
 
+        if not result:
+            return "MsgNotFound"
+
+        logger.debug(f"Translation {lang} -> {"".join(result.get('msg')).replace('\n', ' ')[:15]}...")
         return result
 
 
@@ -37,8 +49,8 @@ translations = TranslationManager()
 
 class BasePlugin:
     def __init__(self):
-        self.bot = bot_funcs
-        self.db_client = dbclient
+        self.bot: TeleBot = bot
+        self.db_client: PocketBaseClient = dbclient
         self.translations: TranslationManager = translations
 
         self.chat_id: int | None = None

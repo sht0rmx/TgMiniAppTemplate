@@ -13,7 +13,7 @@ def get_data(
     only_txt: bool = False
 ) -> Union[Tuple[str, Optional[Union[types.ReplyKeyboardMarkup, types.InlineKeyboardMarkup]]], str]:
     try:
-        data = translations.t(message.from_user.id, msg_id)
+        data = translations.t(message, msg_id)
         if not data:
             return f"Message not found: {msg_id}", None
 
@@ -43,27 +43,19 @@ def get_data(
 
 def next_step(message: types.Message) -> bool:
     try:
-        if message.text in translations.t(message.from_user.id, "answers/yes"):
-            hint_id = bot.send_message(message.chat.id, "^_^")
-            time.sleep(1)
-            bot.delete_message(message.chat.id, hint_id.message_id)
-            return True
-        return False
+        return ask(message)
     except Exception as e:
         logger.error(f"Error in next_step: {e}")
         return False
 
 def ask(message: types.Message) -> bool:
     try:
-        lang = dbclient.what_lang(message.from_user.id)
-        if message.text.lower() == translations.t(lang, "answers/yes"):
+        if message.text.lower() == translations.t(message.from_user.id, "answers/no"):
             return False
-        hint_id = bot.send_message(message.chat.id, ":|")
-        auto_delete(hint_id, 1)
         return True
     except Exception as e:
         logger.error(f"Error in ask: {e}")
-        return True
+        return False
 
 def auto_delete(message: types.Message, delay: int = 0) -> None:
     try:

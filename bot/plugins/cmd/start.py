@@ -1,7 +1,9 @@
+from modules.bot_funcs import get_data
 from modules.plugins import CommandPlugin
 from modules.logging import logger
 from modules import bot
 
 def main(plug: CommandPlugin):
-    bot.send_message(plug.chat_id, "HelloWorld")
-    logger.debug(f"chat_id: {plug.chat_id} message: {plug.msg.text}")
+    text, markup = get_data(plug.msg, "start")
+    bot.send_message(plug.chat_id, text.format(user=plug.msg.from_user.username), reply_markup=markup,
+                     parse_mode="HTML")

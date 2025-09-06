@@ -13,8 +13,11 @@ if not os.path.isdir(plug_dir):
     os.makedirs(plug_dir, exist_ok=True)
 plugin_manager = PluginManager()
 
+from modules.db import dbclient  # твой PocketBaseClient
+
 @bot.message_handler(commands=None, func=lambda m: m.text and m.text.startswith('/'))
 def _command(message: Message):
+    dbclient.check_user(message)
     cmd = message.text.partition(' ')[0].partition('@')[0]
     for r in plugin_manager.find_command(cmd):
         p = Plugin.create('command')
@@ -39,6 +42,9 @@ def _callback(callback: CallbackQuery):
 
 @bot.inline_handler(func=lambda query: True)
 def _inl(query: InlineQuery):
+    fake_msg = type("Obj", (), {"chat": query.from_user, "from_user": query.from_user})()
+    dbclient.check_user(fake_msg)
+
     txt = query.query or ''
     for r in plugin_manager.find_inline(txt):
         p = Plugin.create('inline')
@@ -50,12 +56,14 @@ def _inl(query: InlineQuery):
 
 @bot.message_handler(func=lambda m: True, content_types=['text', 'voice', 'audio', 'photo', 'document'])
 def _message(message: Message):
+    dbclient.check_user(message)
     for r in plugin_manager.find_message_handler(message):
         p = Plugin.create('message')
         p.msg = message
         p.chat_id = message.chat.id
         p.user_id = message.from_user.id
         plugin_manager.run_handler(r, p)
+
 
 
 
