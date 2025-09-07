@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+asyncpg
+sqlalchemy
+python-decouple==3.8
