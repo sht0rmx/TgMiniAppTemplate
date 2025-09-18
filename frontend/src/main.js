@@ -2,22 +2,32 @@ import 'remixicon/fonts/remixicon.css'
 import '@/assets/main.css'
 
 import { createApp } from 'vue'
+import TelegramSdkVue from '@telegram-apps/sdk-vue'
+import { registerSW } from 'virtual:pwa-register'
+import { i18n } from '@/locales/index.js'
+
 import App from './App.vue'
 import router from './router'
+import { notifyUpdate } from './components/UpdatePopup.vue'
 
-export let isTgEnv = !!window.Telegram?.WebApp.initData
-export let TgApp
 
-if (isTgEnv) {
-  TgApp = window.Telegram.WebApp;
-  const BackButton = TgApp.BackButton;
-
-  BackButton.show();
-  BackButton.onClick(() => {
-    window.history.back();
-  });
-}
+const updateSW = registerSW({
+  onNeedRefresh() {
+    notifyUpdate(updateSW)
+  },
+})
 
 const app = createApp(App)
+
+app.use(TelegramSdkVue, {
+  init: true,
+  onBackButton: () => window.history.back(),
+})
+
+app.use(i18n)
 app.use(router)
+
 app.mount('#app')
+
+export let TgApp = app.config.globalProperties.$tg
+export let isTgEnv = !!TgApp?.initData

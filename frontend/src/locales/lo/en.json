@@ -1,0 +1,52 @@
+{
+  "views": {
+    "home": {
+      "header": "Home",
+      "title": "TG MiniApp Example",
+      "description": "Its simple repo that may be used as start point for your project. Template uses VueJs as base js framework, also here is a ui lib and simple icon pack, for simpler usage experience this template we choose PocketBase as go backend framework. Lib for communicate with TelegramApi: PyTelegramBotApi",
+      "hint": "For check status of api we may open setting tab by button on dock or click on the button",
+      "button": "Open settings"
+    },
+    "need_auth": {
+      "header": "Need Auth",
+      "title": "Not in Telegram",
+      "hint": "Please open this app inside Telegram Mini App",
+      "button": "TgMiniApp"
+    },
+    "not_found": {
+      "header": "Not Found",
+      "title": "404",
+      "content": "Oops... Page not found",
+      "hint": "The page you are trying to access does not exist",
+      "button": "Return Home"
+    },
+    "settings": {
+      "header": "Settings",
+      "hint": "See info about this app",
+      "authors": "Authors",
+      "end_hint": "made with ❤️ by @sht0rmx",
+      "badges": {
+        "api": {
+          "succ": "API ok!",
+          "err": "API error (",
+          "unvl": "API unavalible *"
+        },
+        "auth": {
+          "ok": "Auth: {uname}",
+          "err": "Auth: error"
+        }
+      }
+    }
+  },
+  "components": {
+    "dock": {
+      "home": "Home",
+      "settings": "Settings"
+    },
+    "popup": {
+      "text": "Please update app by clicking here!",
+      "update": "Update",
+      "close": "Close"
+    }
+  }
+}

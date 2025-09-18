@@ -1,0 +1,23 @@
+{
+    "start": {
+        "msg": [
+            "Hello @{user}, I'm a bot that can help you with collecting stats \n",
+            "from Faceit servers. For help type /help, to assign a username type /login"
+        ],
+        "inline": {
+            "1": {"/help": "command:help", "/login": "command:login"},
+            "2": {"/info": "command:stats"}
+        }
+    },
+    "login-start-already": {
+        "msg": "You are already logged in. Are you sure you want to change your username?",
+        "key": {
+            "1": ["Yes", "No"]
+        }
+    },
+    "answers": {
+        "yes": "yes",
+        "no": "no"
+    },
+    "cancel": ["/back", "/close", "/cancel"]
+}

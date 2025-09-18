@@ -15,7 +15,7 @@ class Colors:
     CYAN = "\033[36m"
     WHITE = "\033[37m"
 
-    BOLD = '\033[1m'
+    BOLD = "\033[1m"
     RESET = "\033[0m"
 
 
@@ -66,16 +66,15 @@ def setup_logger() -> logging.Logger:
         "%(levelname)s " + Colors.WHITE + "%(message)s" + Colors.RESET
     )
 
-    fileformatter = FileFormatter("%(levelname)s [%(filename)s:%(lineno)-3d] %(message)s")
+    fileformatter = FileFormatter(
+        "%(levelname)s [%(filename)s:%(lineno)-3d] %(message)s"
+    )
 
     log_path = os.path.join("logs", "app.log")
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
     fh = RotatingFileHandler(
-        log_path,
-        maxBytes=10_000_000,
-        backupCount=5,
-        encoding="utf-8"
+        log_path, maxBytes=10_000_000, backupCount=5, encoding="utf-8"
     )
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(fileformatter)
@@ -88,5 +87,6 @@ def setup_logger() -> logging.Logger:
     logger_new.addHandler(ch)
 
     return logger_new
+
 
 logger = setup_logger()
