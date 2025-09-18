@@ -2,7 +2,7 @@ import 'remixicon/fonts/remixicon.css'
 import '@/assets/main.css'
 
 import { createApp } from 'vue'
-import { init } from '@telegram-apps/sdk-vue';
+import { init, backButton, mockTelegramEnv} from '@telegram-apps/sdk-vue';
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
 
@@ -17,20 +17,28 @@ const updateSW = registerSW({
   },
 })
 
-init()
 
-backButton.mount();
+try {
+  init();
+  console.log('Telegram environment detected')
+} catch (err) {
+  console.warn('Not inside Telegram, fallback mode')
+}
 
-const off = backButton.onClick(() => {
-  window.history.back();
-});
+
+if (backButton.show.isAvailable()) {
+  backButton.show();
+  backButton.onClick(() => {
+    window.history.back();
+  });
+}
 
 const app = createApp(App)
+
+export let TgApp = app.config.globalProperties.$tg
+export let isTgEnv = !!TgApp?.initData
 
 app.use(i18n)
 app.use(router)
 
 app.mount('#app')
-
-export let TgApp = app.config.globalProperties.$tg
-export let isTgEnv = !!TgApp?.initData

@@ -1,7 +1,6 @@
-<script lang="js">
+<script setup>
 const tgUrl = import.meta.env.VITE_TG_MINIAPP_START
 </script>
-
 
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen text-center gap-3">

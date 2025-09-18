@@ -1,8 +1,21 @@
 <script setup>
 import BottomDock from '@/components/BottomDock.vue'
 import { retrieveLaunchParams } from '@telegram-apps/sdk';
-const { initDataRaw } = retrieveLaunchParams();
-console.log(initDataRaw)
+import { useRoute } from 'vue-router';
+import { onMounted } from 'vue';
+
+const route = useRoute();
+
+onMounted(() => {
+  if (route.name !== 'NeedAuth') {
+    try {
+      const { initDataRaw } = retrieveLaunchParams()
+      console.log('TG initData:', initDataRaw)
+    } catch (e) {
+      console.warn('TG launch params not available')
+    }
+  }
+})
 </script>
 
 
