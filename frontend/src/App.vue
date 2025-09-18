@@ -1,3 +1,11 @@
+<script setup>
+import BottomDock from '@/components/BottomDock.vue'
+import { retrieveLaunchParams } from '@telegram-apps/sdk';
+const { initDataRaw } = retrieveLaunchParams();
+console.log(initDataRaw)
+</script>
+
+
 <template>
   <div :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name != 'NeedAuth' }]">
 
@@ -13,7 +21,3 @@
     <BottomDock v-if="$route.name != 'NeedAuth'" />
   </div>
 </template>
-
-<script setup>
-import BottomDock from '@/components/BottomDock.vue'
-</script>

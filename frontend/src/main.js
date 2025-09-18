@@ -2,7 +2,7 @@ import 'remixicon/fonts/remixicon.css'
 import '@/assets/main.css'
 
 import { createApp } from 'vue'
-import TelegramSdkVue from '@telegram-apps/sdk-vue'
+import { init } from '@telegram-apps/sdk-vue';
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
 
@@ -17,12 +17,15 @@ const updateSW = registerSW({
   },
 })
 
-const app = createApp(App)
+init()
 
-app.use(TelegramSdkVue, {
-  init: true,
-  onBackButton: () => window.history.back(),
-})
+backButton.mount();
+
+const off = backButton.onClick(() => {
+  window.history.back();
+});
+
+const app = createApp(App)
 
 app.use(i18n)
 app.use(router)
