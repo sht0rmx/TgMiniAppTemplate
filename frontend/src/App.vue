@@ -3,6 +3,7 @@ import BottomDock from '@/components/BottomDock.vue'
 import { retrieveLaunchParams, requestSafeAreaInsets } from '@telegram-apps/sdk';
 import { useRoute } from 'vue-router';
 import { onMounted } from 'vue';
+import { send_auth } from '@/utils/apiclient'
 
 const route = useRoute();
 
@@ -11,9 +12,11 @@ onMounted(async () => {
     try {
       const { initDataRaw } = retrieveLaunchParams()
       console.log('TG initData:', initDataRaw)
+      send_auth(initDataRaw)
     } catch (e) {
-      console.warn('TG launch params not available')
+      console.warn('TG launch params not available', e)
     }
+
     if (requestSafeAreaInsets.isAvailable()) {
       const insets = await requestSafeAreaInsets();
       document.documentElement.style.setProperty("--safe-top", insets.top + "px")

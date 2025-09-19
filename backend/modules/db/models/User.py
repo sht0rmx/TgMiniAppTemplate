@@ -1,5 +1,4 @@
 from sqlalchemy import (
-    ForeignKey,
     String,
     BIGINT,
 )
@@ -17,4 +16,3 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(30))
     username: Mapped[str] = mapped_column(String(30))
     avatar_url: Mapped[str | None] = mapped_column(String, nullable=True)
-    language: Mapped[str | None] = mapped_column(ForeignKey("locales.locale_alias"))
