@@ -22,18 +22,35 @@
     },
     "settings": {
       "header": "Settings",
-      "hint": "See info about this app",
-      "authors": "Authors",
-      "end_hint": "made with ❤️ by @sht0rmx",
-      "badges": {
-        "api": {
-          "succ": "API ok!",
-          "err": "API error (",
-          "unvl": "API unavalible *"
-        },
-        "auth": {
-          "ok": "Auth: {uname}",
-          "err": "Auth: error"
+      "title": "Settings",
+      "hint": "Edit config for better expirence",
+      "general": {
+        "name": "General",
+        "theme": "Enable dark theme",
+        "language": "Select language"
+      },
+      "additional": {
+        "name": "Aditional",
+        "about": "About"
+      },
+      "subviews": {
+        "about": {
+          "header": "About",
+          "title": "About",
+          "hint": "See info about this app",
+          "authors": "Authors",
+          "end_hint": "made with ❤️ by sht0rmx",
+          "badges": {
+            "api": {
+              "succ": "API ok!",
+              "err": "API error (",
+              "unvl": "API unavalible *"
+            },
+            "auth": {
+              "ok": "Auth: {uname}",
+              "err": "Auth: error"
+            }
+          }
         }
       }
     }
@@ -48,5 +65,9 @@
       "update": "Update",
       "close": "Close"
     }
+  },
+  "lang_select": {
+    "ru": "Russian",
+    "en": "English"
   }
 }
