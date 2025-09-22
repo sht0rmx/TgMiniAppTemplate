@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from modules.db.engine import Database
 from modules.routers.v1.UserRouter import user_router
+from modules.routers.v1.TokenRouter import token_router
 
 version = "v0.0.1"
 
@@ -29,9 +30,10 @@ app = FastAPI(
 )
 
 origins = [
-    "http://127.0.0.1:8080",
-    "http://localhost:8080",
-    "https://jlj73h8b-8080.euw.devtunnels.ms/",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://192.168.31.184:5173",
+    "https://miniapp.snipla.ru",
 ]
 
 app.add_middleware(
@@ -49,3 +51,4 @@ async def root():
 
 
 app.include_router(user_router)
+app.include_router(token_router)

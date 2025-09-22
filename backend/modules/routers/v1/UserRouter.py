@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from decouple import config
 
+from dependencies.auth import jwt_required
+from modules.db.models.User import User
 from modules.db.engine import Database
 from modules.services.UsersService import UsersService
 from modules.schemes.user.CheckUserDto import UserDto
@@ -13,11 +16,16 @@ user_service = UsersService()
 db_dep = Database()
 
 
+
 @user_router.post("/webapp")
-async def tg_webapp_auth(dto: UserDto, db: AsyncSession = Depends(db_dep.get_session)):
+async def tg_webapp_auth(
+    dto: UserDto,
+    request: Request,
+    db: AsyncSession = Depends(db_dep.get_session),
+):
     bot_token: str = str(config("BOT_TOKEN"))
 
-    params = dict(x.split("=", 1) for x in dto.initData.split("&") if "=" in x)
+    params = user_service.parse_init_data(init_data=dto.initData)
     hash_str = params.pop("hash", None)
 
     if not hash_str or not user_service.check_telegram_auth(hash_str, dto.initData, bot_token):
@@ -26,26 +34,38 @@ async def tg_webapp_auth(dto: UserDto, db: AsyncSession = Depends(db_dep.get_ses
             detail="Invalid Telegram initData",
         )
 
-    telegram_id = int(params.get("id", 0))
-    username = params.get("username", "")
-    firstname = params.get("first_name", "")
-    photo = params.get("photo_url")
+    user_info = params.get("user", {})
+    telegram_id = int(user_info.get("id", 0))
+    username = user_info.get("username", "")
+    firstname = user_info.get("first_name", "")
+    photo = user_info.get("photo_url")
 
-    user = await user_service.curid_user(db, dto, telegram_id, username, firstname, photo)
+    device_id = request.headers.get("User-Agent", "web")
+    ip_address = request.client.host if request.client else "0.0.0.0"
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Invalid Telegram initData",
-        )
-    
+    result = await user_service.curid_user(
+        db,
+        telegram_id=telegram_id,
+        username=username,
+        firstname=firstname,
+        photo=photo,
+        device_id=device_id,
+        ip_address=ip_address,
+    )
+
+    user = result["user"]
+    tokens = result["tokens"]
+
     return {
-        "id": user.id,
-        "telegram_id": user.telegram_id,
-        "username": user.username,
-        "token": user.token_key,
+        "user": {
+            "id": str(user.id),
+            "telegram_id": user.telegram_id,
+            "username": user.username,
+            "name": user.name,
+            "avatar_url": user.avatar_url,
+        },
+        "tokens": tokens
     }
-
 
 @user_router.post("/bot")
 async def bot_admin_auth(
@@ -58,3 +78,27 @@ async def bot_admin_auth(
         )
 
     return {"status": "ok"}
+
+
+@user_router.get("/profile")
+async def get_profile(
+    db: AsyncSession = Depends(db_dep.get_session),
+    payload: dict = Depends(jwt_required)
+):
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    query = await db.execute(select(User).where(User.telegram_id == int(user_id)))
+    user = query.scalar()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": str(user.id),
+        "telegram_id": user.telegram_id,
+        "username": user.username,
+        "name": user.name,
+        "avatar_url": user.avatar_url,
+    }

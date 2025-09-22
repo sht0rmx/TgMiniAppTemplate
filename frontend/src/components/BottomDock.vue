@@ -24,15 +24,15 @@
 
 <style scoped>
 .dock-safe{
-  bottom: var(--safe-bottom, 0px);
+  bottom: var(--tg-safe-area-inset-bottom, 0px);
 }
 .dock::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(0px - var(--safe-bottom, 0px));
-  height: var(--safe-bottom, 0px);
+  bottom: calc(0px - var(--tg-safe-area-inset-bottom, 0px));
+  height: var(--tg-safe-area-inset-bottom, 0px);
   background-color: inherit;
 }
 </style>

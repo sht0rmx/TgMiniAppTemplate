@@ -1,34 +1,30 @@
 <script setup>
 import BottomDock from '@/components/BottomDock.vue'
-import { retrieveLaunchParams, requestSafeAreaInsets } from '@telegram-apps/sdk';
 import { useRoute } from 'vue-router';
 import { onMounted } from 'vue';
-import { send_auth } from '@/utils/apiclient'
+import { send_auth, ping } from '@/utils/apiclient'
 
 const route = useRoute();
 
-onMounted(async () => {
+onMounted(() => {
   if (route.name !== 'NeedAuth') {
-    try {
-      const { initDataRaw } = retrieveLaunchParams()
-      console.log('TG initData:', initDataRaw)
-      send_auth(initDataRaw)
-    } catch (e) {
-      console.warn('TG launch params not available', e)
-    }
+    if (window.Telegram && window.Telegram.WebApp) {
+      const WebApp = window.Telegram.WebApp;
+      const initDataRaw = WebApp.initData;
+      console.log('TG initData:', initDataRaw);
+      ping();
+      send_auth(initDataRaw);
 
-    if (requestSafeAreaInsets.isAvailable()) {
-      const insets = await requestSafeAreaInsets();
-      document.documentElement.style.setProperty("--safe-top", insets.top + "px")
-      document.documentElement.style.setProperty("--safe-bottom", insets.bottom + "px")
+    } else {
+      console.warn('TG launch params not available. Not inside a Telegram Web App.');
     }
   }
-})
+});
 </script>
 
-
 <template>
-  <div class= "app-container" :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name != 'NeedAuth' }]"> 
+  <div class="app-container"
+    :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name != 'NeedAuth' }]">
 
     <main :class="['flex-1 text-sm text-base-content flex justify-center', { 'p-4': $route.name != 'NeedAuth' }]">
       <div :class="[
@@ -45,6 +41,6 @@ onMounted(async () => {
 
 <style scoped>
 .app-container {
-  padding-top: calc(8px + var(--safe-top, 0px));
+  padding-top: calc(8px + var(--tg-safe-area-inset-top, 0px));
 }
 </style>

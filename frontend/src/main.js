@@ -1,50 +1,44 @@
-import 'remixicon/fonts/remixicon.css'
-import '@/assets/main.css'
+import 'remixicon/fonts/remixicon.css';
+import '@/assets/main.css';
 
-import { createApp } from 'vue'
-import { init, backButton, requestFullscreen, viewport} from '@telegram-apps/sdk-vue';
-import { registerSW } from 'virtual:pwa-register'
-import { i18n } from '@/locales/index.js'
+import { createApp } from 'vue';
+import { registerSW } from 'virtual:pwa-register';
+import { i18n } from '@/locales/index.js';
 
-import App from './App.vue'
-import router from './router'
-import { notifyUpdate } from './components/UpdatePopup.vue'
-
+import App from './App.vue';
+import router from './router';
+import { notifyUpdate } from './components/UpdatePopup.vue';
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    notifyUpdate(updateSW)
+    notifyUpdate(updateSW);
   },
-})
+});
 
-let initdata_avalible = false
+export let isTgEnv = false;
 
-try {
-  await init();
-  initdata_avalible = true
-  console.log('Telegram environment detected')
-} catch (err) {
-  console.warn('Not inside Telegram, fallback mode')
-}
+if (window.Telegram && window.Telegram.WebApp) {
+  isTgEnv = true;
+  console.log('Telegram environment detected');
+  const WebApp = window.Telegram.WebApp;
 
-export let isTgEnv = initdata_avalible
+  WebApp.ready();
 
- if (isTgEnv) {
-    await viewport.mount()
-    await requestFullscreen()
+  WebApp.expand();
 
-    if (backButton.show.isAvailable()) {
-      await backButton.mount()
-      await backButton.show()
-      backButton.onClick(() => {
-        window.history.back()
-      })
-    }
+  if (WebApp.BackButton.isVisible) {
+    WebApp.BackButton.onClick(() => {
+      window.history.back();
+    });
   }
 
-const app = createApp(App)
+} else {
+  console.warn('Not inside Telegram, fallback mode');
+}
 
-app.use(i18n)
-app.use(router)
+const app = createApp(App);
 
-app.mount('#app')
+app.use(i18n);
+app.use(router);
+
+app.mount('#app');
