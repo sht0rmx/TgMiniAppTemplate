@@ -1,6 +1,6 @@
 import en from './lo/en.json'
 import ru from './lo/ru.json'
-import { createI18n } from "vue-i18n"
+import { createI18n } from 'vue-i18n'
 
 function getLangFromCookie() {
   const match = document.cookie.match(/(?:^|;\s*)lang=([^;]+)/)
@@ -9,7 +9,7 @@ function getLangFromCookie() {
 
 const savedLocale = getLangFromCookie()
 
-const userLocale = savedLocale || (navigator.language || navigator.userLanguage)
+const userLocale = savedLocale || navigator.language || navigator.userLanguage
 const locale = userLocale.split('-')[0]
 
 export const supported = ['en', 'ru']
@@ -17,14 +17,14 @@ const finalLocale = supported.includes(locale) ? locale : 'en'
 
 const messages = {
   en,
-  ru
+  ru,
 }
 
 const i18n = createI18n({
   legacy: false,
   locale: finalLocale,
   fallbackLocale: 'en',
-  messages
+  messages,
 })
 
 export { i18n }

@@ -1,14 +1,12 @@
 <script setup lang="js">
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 function gotoSettings() {
   router.push('/settings')
 }
-
 </script>
-
 
 <template>
   <div class="flex flex-col items-center justify-center space-y-3 mt-8 mb-12">

@@ -3,11 +3,10 @@ import { i18n } from '@/locales/index.js'
 
 import Home from '@/views/Home.vue'
 import NeedAuthView from '@/views/NeedAuth.vue'
-import SettingsView from '@/views/Settings/init.vue'
-import AboutView from "@/views/Settings/about.vue"
+import Settings from '@/views/Settings.vue'
 import NotFoundView from '@/views/NotFound.vue'
 
-import { isTgEnv } from '@/main.js'
+import { isTgEnv, WebApp } from '@/main.js'
 
 const routes = [
   {
@@ -25,14 +24,8 @@ const routes = [
   {
     path: '/settings',
     name: 'Settings',
-    component: SettingsView,
+    component: Settings,
     meta: { titleKey: 'views.settings.header' },
-  },
-  {
-    path: '/settings/about',
-    name: 'About',
-    component: AboutView,
-    meta: { titleKey: 'views.settings.subviews.about.header' },
   },
   {
     path: '/:pathMatch(.*)*',
@@ -51,6 +44,11 @@ router.afterEach((to) => {
   const key = to.meta.titleKey
   if (key) {
     document.title = i18n.global.t(key)
+  }
+  if (["/", "/need_auth"].includes(to.path)) {
+    WebApp.BackButton.hide()
+  } else {
+    WebApp.BackButton.show()
   }
 })
 

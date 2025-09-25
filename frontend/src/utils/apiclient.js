@@ -1,120 +1,94 @@
-export const getAccessToken = () => localStorage.getItem('access_token')
-export const getRefreshToken = () => localStorage.getItem('refresh_token')
-export const setTokens = ({ access_token, refresh_token }) => {
-  localStorage.setItem('access_token', access_token)
-  localStorage.setItem('refresh_token', refresh_token)
-}
-export const clearTokens = () => {
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-}
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
-export const refreshAccessToken = async () => {
-  const refresh_token = getRefreshToken()
-  if (!refresh_token) return null
+class ApiClient {
+  constructor() {
+    this.accessToken = null
+    this.fpId = null
+  }
 
-  try {
-    const resp = await fetch(`${import.meta.env.VITE_API_URL}/token/refresh`, {
+  async initFingerprint() {
+    if (this.fpId) return this.fpId
+    const fp = await FingerprintJS.load()
+    const res = await fp.get()
+    this.fpId = res.visitorId
+    localStorage.setItem('fingerprint', this.fpId)
+    return this.fpId
+  }
+
+  getFingerprint() {
+    return this.fpId || localStorage.getItem('fingerprint') || 'default'
+  }
+
+  getAccessToken() {
+    return this.accessToken
+  }
+
+  setTokens({ access_token }) {
+    this.accessToken = access_token
+  }
+
+  async login(initData) {
+    const fp = await this.initFingerprint()
+    const res = await fetch('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token }),
-    })
-
-    if (!resp.ok) return null
-
-    const data = await resp.json()
-    if (data.access_token && data.refresh_token) {
-      setTokens(data)
-      return data.access_token
-    }
-    return null
-  } catch (err) {
-    console.error('Failed to refresh token:', err)
-    return null
-  }
-}
-
-export const authFetch = async (url, options = {}) => {
-  let token = getAccessToken()
-  const headers = { 'Content-Type': 'application/json', ...options.headers }
-  if (token) headers['Authorization'] = `Bearer ${token}`
-
-  try {
-    let resp = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
-      ...options,
-      headers,
-    })
-
-    if (resp.status === 401) {
-      token = await refreshAccessToken()
-      if (!token) throw new Error('Unauthorized and failed to refresh token')
-
-      headers['Authorization'] = `Bearer ${token}`
-      resp = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
-        ...options,
-        headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        initData,
+        fingerprint: fp,
+        userAgent: navigator.userAgent
       })
-    }
-
-    if (!resp.ok) {
-      const errorData = await resp.json().catch(() => ({}))
-      console.error(`HTTP error! Status: ${resp.status}`, errorData)
-      return errorData
-    }
-
-    return await resp.json()
-  } catch (error) {
-    console.error('Network or server error:', error)
-    throw error
-  }
-}
-
-export const send_auth = async (initData) => {
-  const data = await authFetch('/telegram/auth/webapp', {
-    method: 'POST',
-    body: JSON.stringify({ initData }),
-  })
-
-  if (data?.tokens?.access_token) {
-    setTokens(data.tokens)
-  }
-
-  return data
-}
-
-export const ping = async () => {
-  const success = await authFetch('/ping')
-  return !!success
-}
-
-export const logout = async () => {
-  const refresh_token = getRefreshToken()
-  if (!refresh_token) {
-    clearTokens()
-    return
-  }
-
-  try {
-    const resp = await fetch(`${import.meta.env.VITE_API_URL}/token/revoke`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-      body: JSON.stringify({ refresh_token }),
     })
+    if (!res.ok) throw new Error('login failed')
+    const data = await res.json()
+    this.setTokens(data)
+    return data
+  }
 
-    if (!resp.ok) {
-      const errorData = await resp.json().catch(() => ({}))
-      console.warn('Failed to revoke token:', resp.status, errorData)
+  async refreshTokens() {
+    const fp = await this.initFingerprint()
+    const res = await fetch('/api/v1/tokens/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ fingerprint: fp })
+    })
+    if (!res.ok) throw new Error('failed to refresh')
+    const data = await res.json()
+    this.setTokens(data)
+    return data.access_token
+  }
+
+  async apiFetch(url, opts = {}) {
+    opts.headers = opts.headers || {}
+    if (this.accessToken) {
+      opts.headers['Authorization'] = `Bearer ${this.accessToken}`
     }
-  } catch (err) {
-    console.error('Network error while revoking token:', err)
-  } finally {
-    clearTokens()
+
+    let res = await fetch(url, { ...opts, credentials: 'include' })
+
+    if (res.status === 401) {
+      try {
+        const newToken = await this.refreshTokens()
+        opts.headers['Authorization'] = `Bearer ${newToken}`
+        res = await fetch(url, { ...opts, credentials: 'include' })
+      } catch {
+        throw new Error('unauthorized')
+      }
+    }
+
+    return res
+  }
+
+  async logout() {
+    await fetch('/api/v1/tokens/revoke', {
+      method: 'POST',
+      credentials: 'include'
+    })
+    this.accessToken = null
+    this.fpId = null
+    localStorage.removeItem('fingerprint')
   }
 }
 
-export const fetchUserProfile = async () => {
-  return await authFetch('/user/profile')
-}
+export const apiClient = new ApiClient()

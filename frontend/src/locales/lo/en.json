@@ -26,19 +26,18 @@
       "hint": "Edit config for better expirence",
       "general": {
         "name": "General",
-        "theme": "Enable dark theme",
         "language": "Select language"
       },
       "additional": {
         "name": "Aditional",
-        "about": "About"
+        "authors": "Authors"
+      },
+      "danger": {
+        "name": "Danger Zone",
+        "logout": "Logout"
       },
       "subviews": {
         "about": {
-          "header": "About",
-          "title": "About",
-          "hint": "See info about this app",
-          "authors": "Authors",
           "end_hint": "made with ❤️ by sht0rmx",
           "badges": {
             "api": {

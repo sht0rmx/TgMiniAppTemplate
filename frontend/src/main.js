@@ -1,44 +1,49 @@
-import 'remixicon/fonts/remixicon.css';
-import '@/assets/main.css';
+import 'remixicon/fonts/remixicon.css'
+import '@/assets/main.css'
 
-import { createApp } from 'vue';
-import { registerSW } from 'virtual:pwa-register';
-import { i18n } from '@/locales/index.js';
+import { createApp } from 'vue'
+import { registerSW } from 'virtual:pwa-register'
+import { i18n } from '@/locales/index.js'
 
-import App from './App.vue';
-import router from './router';
-import { notifyUpdate } from './components/UpdatePopup.vue';
+import App from './App.vue'
+import router from './router'
+import { notifyUpdate } from './components/UpdatePopup.vue'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    notifyUpdate(updateSW);
+    notifyUpdate(updateSW)
   },
-});
+})
 
-export let isTgEnv = false;
+export let isTgEnv = false
+export let WebApp = null
 
-if (window.Telegram && window.Telegram.WebApp) {
-  isTgEnv = true;
-  console.log('Telegram environment detected');
-  const WebApp = window.Telegram.WebApp;
+if (window?.Telegram?.WebApp) {
+  WebApp = window.Telegram.WebApp
+  const initDataRaw = WebApp.initData || ""
 
-  WebApp.ready();
+  if (initDataRaw.length > 0) {
+    isTgEnv = true
+    console.log('Telegram environment detected')
 
-  WebApp.expand();
+    WebApp.ready()
+    WebApp.expand()
 
-  if (WebApp.BackButton.isVisible) {
+    WebApp.BackButton.show()
     WebApp.BackButton.onClick(() => {
-      window.history.back();
-    });
+      window.history.back()
+    })
+  } else {
+    console.warn('Telegram.WebApp found, but no initData (probably opened in browser)')
   }
-
 } else {
-  console.warn('Not inside Telegram, fallback mode');
+  console.warn('Not inside Telegram, fallback mode')
 }
 
-const app = createApp(App);
 
-app.use(i18n);
-app.use(router);
+const app = createApp(App)
 
-app.mount('#app');
+app.use(i18n)
+app.use(router)
+
+app.mount('#app')
