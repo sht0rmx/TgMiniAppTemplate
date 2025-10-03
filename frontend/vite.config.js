@@ -2,7 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+// import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -18,7 +18,7 @@ export default defineConfig({
       manifest: {
         name: 'TgMiniAppTemplate',
         short_name: 'MiniApp',
-        description: 'example of frontend part of tgminiapptemplate on github',
+        description: 'example of frontend part of TgMiniAppTemplate on github',
         theme_color: '#333331',
         icons: [
           {
@@ -36,7 +36,7 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/miniapp\.snipla\.com\/.*$/,
+            urlPattern: /^https:\/\/jlj73h8b-5173\.euw\.devtunnels\.ms\/.*$/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pages-cache',

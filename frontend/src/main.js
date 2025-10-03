@@ -2,19 +2,19 @@ import 'remixicon/fonts/remixicon.css'
 import '@/assets/main.css'
 
 import { createApp } from 'vue'
-import { registerSW } from 'virtual:pwa-register'
+// import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
 import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
-import { notifyUpdate } from './components/UpdatePopup.vue'
+// import { notifyUpdate } from './components/UpdatePopup.vue'
 
-const updateSW = registerSW({
-  onNeedRefresh() {
-    notifyUpdate(updateSW)
-  },
-})
+// const updateSW = registerSW({
+//   onNeedRefresh() {
+//     notifyUpdate(updateSW)
+//   },
+// })
 
 export let isTgEnv = false
 export let WebApp = null
@@ -27,7 +27,13 @@ if (window?.Telegram?.WebApp) {
     isTgEnv = true
     console.log('Telegram environment detected')
 
-    WebApp.expand()
+    const isDesktop = WebApp.platform === "tdesktop"
+    const openedFromInlineButton = !!WebApp.initDataUnsafe?.start_param
+
+    // if (!isDesktop || openedFromInlineButton) {
+    //   WebApp.disableVerticalSwipes()
+    //   WebApp.requestFullscreen()
+    // }
 
     WebApp.BackButton.show()
     WebApp.BackButton.onClick(() => {

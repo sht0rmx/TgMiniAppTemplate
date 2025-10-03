@@ -64,5 +64,8 @@
   "lang_select": {
     "ru": "Russian",
     "en": "English"
+  },
+  "other": {
+    "load": "..."
   }
 }

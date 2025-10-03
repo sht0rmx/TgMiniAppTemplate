@@ -1,69 +1,37 @@
 <script setup>
 import BottomDock from '@/components/BottomDock.vue'
-import { useRoute, useRouter } from 'vue-router'
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { apiClient } from '@/api/client.js'
 import { isTgEnv, WebApp } from '@/main.js'
-import { useUserStore } from '@/store/user.js'
-
+import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
-const initialized = ref(false)
 
 onMounted(async () => {
-  if (route.name === 'NeedAuth') return
+  try {
+    if (route.name === 'NeedAuth') return
 
-  let api_status = await apiClient.ping()
-  console.log('ping api:', api_status)
+    await apiClient.ping()
 
-  let token = apiClient.getAccessToken()
-  console.log('access token:', token)
-
-  if (!token) {
-    console.log('token not found, refreshing')
-    const r = await apiClient.refreshTokens()
-    console.log('refresh response', r)
-    if (r.code === 200) {
-      token = r.access
-      console.log('> refresh successful, token: ', token)
-    } else {
-      console.log('> cant refresh! status: ', r.status)
+    if (!apiClient.getAccessToken()) {
+      await apiClient.refreshTokens()
     }
-  }
 
-  if (!token && isTgEnv) {
-    console.log('token not found, login')
-    const r = await apiClient.login(WebApp.initData)
-    console.log('login response', r)
-    if (r.code === 200) {
-      token = r.access
-      console.log('> login successful, token: ', token)
+    if (!apiClient.getAccessToken() && isTgEnv) {
+      await apiClient.login(WebApp.initData)
     }
+
+    if (!apiClient.getAccessToken()) {
+      return await router.push('/need_auth')
+    }
+
+    await apiClient.check()
+    WebApp.ready()
+  } catch (err) {
+    console.log(err)
+    await router.push('/need_auth')
   }
-
-  if (!token) {
-    console.log('cant get token!')
-    return await router.push('/need_auth')
-  }
-
-  const store = useUserStore()
-  console.log('validate token: ', token)
-
-  const res = await apiClient.apiFetch('/api/v1/auth/check')
-  console.log('response', res)
-
-  if (!res || res.status !== 200) {
-    store.clearUser()
-    console.log('invalid token!')
-    return await router.push('/need_auth')
-  }
-
-  store.setUser(res.data)
-
-  initialized.value = true
-  WebApp.ready()
 })
-
 </script>
 
 <template>
