@@ -4,6 +4,7 @@ import '@/assets/main.css'
 import { createApp } from 'vue'
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
+import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
@@ -26,7 +27,6 @@ if (window?.Telegram?.WebApp) {
     isTgEnv = true
     console.log('Telegram environment detected')
 
-    WebApp.ready()
     WebApp.expand()
 
     WebApp.BackButton.show()
@@ -40,9 +40,11 @@ if (window?.Telegram?.WebApp) {
   console.warn('Not inside Telegram, fallback mode')
 }
 
+const pinia = createPinia()
 
 const app = createApp(App)
 
+app.use(pinia)
 app.use(i18n)
 app.use(router)
 

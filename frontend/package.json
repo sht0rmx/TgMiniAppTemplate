@@ -15,6 +15,8 @@
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@tailwindcss/vite": "^4.1.12",
+    "axios": "^1.12.2",
+    "pinia": "^3.0.3",
     "remixicon": "^4.6.0",
     "tailwindcss": "^4.1.12",
     "vue": "^3.5.18",

@@ -12,8 +12,11 @@ export const RefreshSession = new EntitySchema({
     userId: {
       type: "uuid",
     },
-    refreshToken: {
-      type: "uuid",
+    // store bcrypt hash of refresh token
+    refreshTokenHash: {
+      type: "varchar",
+      length: 200,
+      nullable: false,
     },
     user_agent: {
       type: "varchar",
@@ -25,10 +28,18 @@ export const RefreshSession = new EntitySchema({
     },
     ip: {
       type: "varchar",
-      length: 15,
+      length: 45,
+    },
+    revoked: {
+      type: "boolean",
+      default: false,
     },
     expiresIn: {
-      type: "bigint",
+      type: "timestamptz",
+    },
+    lastUsed: {
+      type: "timestamptz",
+      nullable: true,
     },
     createdAt: {
       type: "timestamptz",

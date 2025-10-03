@@ -21,6 +21,10 @@ export const User = new EntitySchema({
       type: "varchar",
       length: 30,
     },
+    role: {
+      type: "varchar",
+      length: 30,
+    },
     avatar_url: {
       type: "text",
       nullable: true,

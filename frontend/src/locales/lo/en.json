@@ -3,53 +3,49 @@
     "home": {
       "header": "Home",
       "title": "TG MiniApp Example",
-      "description": "Its simple repo that may be used as start point for your project. Template uses VueJs as base js framework, also here is a ui lib and simple icon pack, for simpler usage experience this template we choose PocketBase as go backend framework. Lib for communicate with TelegramApi: PyTelegramBotApi",
-      "hint": "For check status of api we may open setting tab by button on dock or click on the button",
-      "button": "Open settings"
+      "description": "This is a simple repository that can be used as a starting point for your project. The template is based on VueJs. It also includes a UI library and an icon pack. For convenience, this template uses PocketBase as a Go backend. To communicate with the Telegram API, the PyTelegramBotApi library is used.",
+      "hint": "To check the API status, you can open the settings tab via the dock button or by clicking the button.",
+      "button": "Open Settings"
     },
     "need_auth": {
-      "header": "Need Auth",
+      "header": "Authorization Required",
       "title": "Not in Telegram",
-      "hint": "Please open this app inside Telegram Mini App",
+      "hint": "Please open this app inside the Telegram Mini App.",
       "button": "TgMiniApp"
     },
     "not_found": {
       "header": "Not Found",
       "title": "404",
-      "content": "Oops... Page not found",
-      "hint": "The page you are trying to access does not exist",
+      "content": "Oops... Page not found.",
+      "hint": "The page you are trying to access does not exist.",
       "button": "Return Home"
     },
     "settings": {
       "header": "Settings",
       "title": "Settings",
-      "hint": "Edit config for better expirence",
+      "hint": "Edit config for better expirence.",
       "general": {
         "name": "General",
-        "language": "Select language"
+        "language": "Language"
       },
       "additional": {
-        "name": "Aditional",
+        "name": "Additional",
         "authors": "Authors"
       },
       "danger": {
         "name": "Danger Zone",
         "logout": "Logout"
       },
-      "subviews": {
-        "about": {
-          "end_hint": "made with ❤️ by sht0rmx",
-          "badges": {
-            "api": {
-              "succ": "API ok!",
-              "err": "API error (",
-              "unvl": "API unavalible *"
-            },
-            "auth": {
-              "ok": "Auth: {uname}",
-              "err": "Auth: error"
-            }
-          }
+      "end_hint": "made with ❤️ by sht0rmx",
+      "badges": {
+        "api": {
+          "success": "API is working!",
+          "error": "API error (",
+          "unavailable": "API unavailable *"
+        },
+        "auth": {
+          "ok": "Auth: {uname}",
+          "error": "Auth: error"
         }
       }
     }
@@ -60,7 +56,7 @@
       "settings": "Settings"
     },
     "popup": {
-      "text": "Please update app by clicking here!",
+      "text": "Please update the app by clicking here!",
       "update": "Update",
       "close": "Close"
     }

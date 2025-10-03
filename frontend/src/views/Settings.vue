@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supported } from '@/locales/index.js'
-import { apiClient } from '@/utils/apiclient.js'
+import { apiClient } from '@/api/client.js'
+import { useUserStore } from '@/store/user.js'
 
 const badgeDb = ref('badge badge-outline badge-info')
 const badgeAuth = ref('badge badge-outline badge-info')
@@ -24,44 +25,38 @@ function setLang(l) {
 async function handleLogout() {
   await apiClient.logout()
   isLogged.value = false
-  router.push('/need_auth')
+  await router.push('/need_auth')
 }
 
 async function checkAuth() {
-  try {
-    const res = await apiClient.apiFetch('/api/v1/users/me')
-    const user = await res.json()
-
-    if (user && user.id) {
-      badgeAuth.value = 'badge badge-success'
-      statusAuth.value = t('views.settings.subviews.about.badges.auth.ok', {
-        uname: user.username || user.name,
-      })
-    } else {
-      badgeAuth.value = 'badge badge-error'
-      statusAuth.value = t('views.settings.subviews.about.badges.auth.err')
-    }
-  } catch (err) {
-    console.error('Auth check failed:', err)
+  const store = useUserStore()
+  const user = store.user
+  console.log(user)
+  if (user && user.id) {
+    badgeAuth.value = 'badge badge-success'
+    statusAuth.value = t('views.settings.badges.auth.ok', {
+      uname: user.username || user.name,
+    })
+  } else {
     badgeAuth.value = 'badge badge-error'
-    statusAuth.value = t('views.settings.subviews.about.badges.auth.err')
+    statusAuth.value = t('views.settings.badges.auth.error')
   }
 }
 
 async function fetchStatus() {
   try {
-    const res = await apiClient.apiFetch('/api/v1/ping')
-    if (res.ok) {
+    const status = await apiClient.ping()
+    if (status) {
       badgeDb.value = 'badge badge-success'
-      statusDb.value = t('views.settings.subviews.about.badges.api.succ')
+      statusDb.value = t('views.settings.badges.api.success')
     } else {
       badgeDb.value = 'badge badge-error'
-      statusDb.value = t('views.settings.subviews.about.badges.api.unvl')
+      statusDb.value = t('views.settings.badges.api.unavailable')
     }
   } catch (err) {
-    console.error('DB ping failed:', err)
+    console.error('ping failed:', err)
     badgeDb.value = 'badge badge-warning'
-    statusDb.value = t('views.settings.subviews.about.badges.api.err')
+    statusDb.value = t('views.settings.badges.api.error')
   }
 }
 
@@ -76,7 +71,6 @@ onMounted(() => {
     <h1 class="text-4xl font-bold">{{ t('views.settings.header') }}</h1>
     <p class="text-gray-400 text-base">{{ t('views.settings.hint') }}</p>
   </div>
-
 
   <div class="flex flex-col w-full max-w mx-auto p-2 mb-8 gap-6">
     <div>
@@ -136,28 +130,30 @@ onMounted(() => {
       <div class="flex flex-col space-y-2 mb-2 ml-1">
         <h2 class="text-sm font-bold">{{ t('views.settings.danger.name') }}</h2>
       </div>
-    <ul class="list bg-error rounded-box shadow-md w-full relative hover:bg-warning">
-      <li>
-        <a
-          @click="handleLogout"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="list-row items-center flex w-full"
-        >
-          <i class="ri-logout-box-line text-3xl text-gray-950"></i>
-          <div class="flex-1 text-gray-950">{{ t('views.settings.danger.logout') }}</div>
-          <i class="ri-arrow-right-s-line text-gray-950"></i>
-        </a>
-      </li>
-    </ul>
-      </div>
+      <ul class="list bg-error rounded-box shadow-md w-full relative hover:bg-warning">
+        <li>
+          <a
+            @click="handleLogout"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="list-row items-center flex w-full"
+          >
+            <i class="ri-logout-box-line text-3xl text-gray-950"></i>
+            <div class="flex-1 text-gray-950">{{ t('views.settings.danger.logout') }}</div>
+            <i class="ri-arrow-right-s-line text-gray-950"></i>
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
 
   <div class="text-center items-center text-sm text-gray-400 mt-5 space-y-2">
-    {{ t('views.settings.subviews.about.end_hint') }}
+    {{ t('views.settings.end_hint') }}
   </div>
 
-  <div class="text-center items-center text-sm text-gray-400 mt-2 space-x-2 flex justify-center gap-2">
+  <div
+    class="text-center items-center text-sm text-gray-400 mt-2 space-x-2 flex justify-center gap-2"
+  >
     <div class="badge badge-sm cursor-pointer" :class="badgeDb" @click="fetchStatus()">
       {{ statusDb }}
     </div>

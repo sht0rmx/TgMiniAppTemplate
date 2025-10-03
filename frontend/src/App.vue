@@ -1,37 +1,69 @@
 <script setup>
 import BottomDock from '@/components/BottomDock.vue'
-import { useRoute } from 'vue-router'
-import { onMounted } from 'vue'
-import { apiClient } from '@/utils/apiclient'
+import { useRoute, useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { apiClient } from '@/api/client.js'
 import { isTgEnv, WebApp } from '@/main.js'
+import { useUserStore } from '@/store/user.js'
 
 const route = useRoute()
+const router = useRouter()
+const initialized = ref(false)
 
 onMounted(async () => {
-  if (route.name !== 'NeedAuth') {
-    await apiClient.apiFetch('/api/v1/ping')
+  if (route.name === 'NeedAuth') return
 
-    if (isTgEnv) {
-      const initDataRaw = WebApp.initData
+  let api_status = await apiClient.ping()
+  console.log('ping api:', api_status)
 
-      let token = apiClient.getAccessToken()
-      if (!token) {
-        try {
-          token = await apiClient.refreshTokens()
-          console.log('refreshed:', token)
-        } catch {
-          console.warn('refresh failed, doing login')
-        }
-      }
+  let token = apiClient.getAccessToken()
+  console.log('access token:', token)
 
-      if (!token) {
-        await apiClient.login(initDataRaw)
-      }
+  if (!token) {
+    console.log('token not found, refreshing')
+    const r = await apiClient.refreshTokens()
+    console.log('refresh response', r)
+    if (r.code === 200) {
+      token = r.access
+      console.log('> refresh successful, token: ', token)
     } else {
-      console.warn('TG launch params not available. Not inside a Telegram Web App.')
+      console.log('> cant refresh! status: ', r.status)
     }
   }
+
+  if (!token && isTgEnv) {
+    console.log('token not found, login')
+    const r = await apiClient.login(WebApp.initData)
+    console.log('login response', r)
+    if (r.code === 200) {
+      token = r.access
+      console.log('> login successful, token: ', token)
+    }
+  }
+
+  if (!token) {
+    console.log('cant get token!')
+    return await router.push('/need_auth')
+  }
+
+  const store = useUserStore()
+  console.log('validate token: ', token)
+
+  const res = await apiClient.apiFetch('/api/v1/auth/check')
+  console.log('response', res)
+
+  if (!res || res.status !== 200) {
+    store.clearUser()
+    console.log('invalid token!')
+    return await router.push('/need_auth')
+  }
+
+  store.setUser(res.data)
+
+  initialized.value = true
+  WebApp.ready()
 })
+
 </script>
 
 <template>
@@ -57,5 +89,6 @@ onMounted(async () => {
 <style scoped>
 .app-container {
   padding-top: calc(var(--tg-safe-area-inset-top, 0px));
+  overflow-x: clip;
 }
 </style>
