@@ -5,11 +5,14 @@ import { useI18n } from 'vue-i18n'
 import { supported } from '@/locales/index.js'
 import { apiClient } from '@/api/client.js'
 import { useUserStore } from '@/store/user.js'
+import { isTgEnv } from '@/main.js'
 
 const badgeDb = ref('badge badge-outline badge-info')
 const badgeAuth = ref('badge badge-outline badge-info')
-const statusDb = ref('...')
-const statusAuth = ref('...')
+const statusDb = ref('other.load')
+const statusAuth = ref('other.load')
+const username = ref('')
+const store = useUserStore()
 
 const { locale, t } = useI18n()
 const router = useRouter()
@@ -29,17 +32,16 @@ async function handleLogout() {
 }
 
 async function checkAuth() {
-  const store = useUserStore()
-  const user = store.user
-  console.log(user)
+  await apiClient.check()
+  let user = store.user
   if (user && user.id) {
+    username.value = user.username
     badgeAuth.value = 'badge badge-success'
-    statusAuth.value = t('views.settings.badges.auth.ok', {
-      uname: user.username || user.name,
-    })
+    statusAuth.value = 'views.settings.badges.auth.ok'
   } else {
+    username.value = ''
     badgeAuth.value = 'badge badge-error'
-    statusAuth.value = t('views.settings.badges.auth.error')
+    statusAuth.value = 'views.settings.badges.auth.error'
   }
 }
 
@@ -48,15 +50,15 @@ async function fetchStatus() {
     const status = await apiClient.ping()
     if (status) {
       badgeDb.value = 'badge badge-success'
-      statusDb.value = t('views.settings.badges.api.success')
+      statusDb.value = 'views.settings.badges.api.success'
     } else {
       badgeDb.value = 'badge badge-error'
-      statusDb.value = t('views.settings.badges.api.unavailable')
+      statusDb.value = 'views.settings.badges.api.unavailable'
     }
   } catch (err) {
     console.error('ping failed:', err)
     badgeDb.value = 'badge badge-warning'
-    statusDb.value = t('views.settings.badges.api.error')
+    statusDb.value = 'views.settings.badges.api.error'
   }
 }
 
@@ -126,7 +128,7 @@ onMounted(() => {
       </ul>
     </div>
 
-    <div v-if="isLogged">
+    <div v-if="isLogged && !isTgEnv">
       <div class="flex flex-col space-y-2 mb-2 ml-1">
         <h2 class="text-sm font-bold">{{ t('views.settings.danger.name') }}</h2>
       </div>
@@ -155,10 +157,10 @@ onMounted(() => {
     class="text-center items-center text-sm text-gray-400 mt-2 space-x-2 flex justify-center gap-2"
   >
     <div class="badge badge-sm cursor-pointer" :class="badgeDb" @click="fetchStatus()">
-      {{ statusDb }}
+      {{ t(statusDb) }}
     </div>
     <div class="badge badge-sm cursor-pointer" :class="badgeAuth" @click="checkAuth()">
-      {{ statusAuth }}
+      {{ t(statusAuth) }} {{ username }}
     </div>
   </div>
 </template>

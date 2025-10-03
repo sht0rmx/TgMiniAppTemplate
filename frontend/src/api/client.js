@@ -1,5 +1,8 @@
 import axios from 'axios'
-import router from '@/router/index.js'
+import { useUserStore } from '@/store/user.js'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -51,7 +54,11 @@ class Client {
 
   setAccessToken(token) {
     this.accessToken = token
-    this.axios.defaults.headers['Authorization'] = token ? `Bearer ${token}` : ''
+    if (token) {
+      this.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    } else {
+      delete this.axios.defaults.headers.common['Authorization']
+    }
   }
 
   async login(initData) {
@@ -70,7 +77,7 @@ class Client {
     try {
       const res = await this.axios.post('/api/v1/auth/token/refresh')
       if (res.status === 200) {
-        this.accessToken = res.data.access_token
+        this.setAccessToken(res.data.access_token)
         return { access: res.data.access_token, code: res.status }
       }
       return { access: null, code: res.status }
@@ -85,6 +92,18 @@ class Client {
   async logout() {
     await this.axios.post('/api/v1/auth/token/revoke')
     this.setAccessToken(null)
+  }
+
+  async check() {
+    const store = useUserStore()
+    const res = await apiClient.apiFetch('/api/v1/auth/check')
+
+    if (!res || res.status !== 200) {
+      store.clearUser()
+      await router.push('/need_auth')
+    }
+
+    store.setUser(res.data)
   }
 
   async apiFetch(url, opts = {}) {
