@@ -1,14 +1,12 @@
 <script setup lang="js">
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 function gotoSettings() {
   router.push('/settings')
 }
-
 </script>
-
 
 <template>
   <div class="flex flex-col items-center justify-center space-y-3 mt-8 mb-12">
@@ -17,11 +15,11 @@ function gotoSettings() {
     <p class="text-gray-400 text-base max-w-lg text-center">
       {{ $t('views.home.description') }}
     </p>
-    <p class="text-gray-200 text-base max-w-sm text-center my-6">
-      {{ $t('views.home.hint') }}
-    </p>
-    <button class="btn btn-soft btn-accent px-8" @click="gotoSettings()">
+    <button class="btn btn-soft btn-accent px-8 mt-6" @click="gotoSettings()">
       {{ $t('views.home.button') }}
     </button>
+    <p class="text-gray-600 text-sm max-w-xs text-center my-1">
+      {{ $t('views.home.hint') }}
+    </p>
   </div>
 </template>

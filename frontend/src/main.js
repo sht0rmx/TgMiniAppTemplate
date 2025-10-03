@@ -2,14 +2,13 @@ import 'remixicon/fonts/remixicon.css'
 import '@/assets/main.css'
 
 import { createApp } from 'vue'
-import { init, backButton, mockTelegramEnv} from '@telegram-apps/sdk-vue';
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
+import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
 import { notifyUpdate } from './components/UpdatePopup.vue'
-
 
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -17,27 +16,35 @@ const updateSW = registerSW({
   },
 })
 
+export let isTgEnv = false
+export let WebApp = null
 
-try {
-  init();
-  console.log('Telegram environment detected')
-} catch (err) {
+if (window?.Telegram?.WebApp) {
+  WebApp = window.Telegram.WebApp
+  const initDataRaw = WebApp.initData || ""
+
+  if (initDataRaw.length > 0) {
+    isTgEnv = true
+    console.log('Telegram environment detected')
+
+    WebApp.expand()
+
+    WebApp.BackButton.show()
+    WebApp.BackButton.onClick(() => {
+      window.history.back()
+    })
+  } else {
+    console.warn('Telegram.WebApp found, but no initData (probably opened in browser)')
+  }
+} else {
   console.warn('Not inside Telegram, fallback mode')
 }
 
-
-if (backButton.show.isAvailable()) {
-  backButton.show();
-  backButton.onClick(() => {
-    window.history.back();
-  });
-}
+const pinia = createPinia()
 
 const app = createApp(App)
 
-export let TgApp = app.config.globalProperties.$tg
-export let isTgEnv = !!TgApp?.initData
-
+app.use(pinia)
 app.use(i18n)
 app.use(router)
 

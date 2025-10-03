@@ -6,7 +6,7 @@ services:
     volumes:
       - frontend_data:/app/dist
     ports:
-      - "8080:8080"
+      - "5173:8080"
     restart: unless-stopped
 
   backend:
