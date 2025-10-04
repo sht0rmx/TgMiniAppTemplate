@@ -30,15 +30,18 @@ if (window?.Telegram?.WebApp) {
     const isDesktop = WebApp.platform === "tdesktop"
     const openedFromInlineButton = !!WebApp.initDataUnsafe?.start_param
 
-    // if (!isDesktop || openedFromInlineButton) {
-    //   WebApp.disableVerticalSwipes()
-    //   WebApp.requestFullscreen()
-    // }
+    console.log(isDesktop, openedFromInlineButton)
+
+    if (!isDesktop) {
+      WebApp.disableVerticalSwipes()
+      WebApp.requestFullscreen()
+    }
 
     WebApp.BackButton.show()
     WebApp.BackButton.onClick(() => {
       window.history.back()
     })
+    WebApp.ready()
   } else {
     console.warn('Telegram.WebApp found, but no initData (probably opened in browser)')
   }

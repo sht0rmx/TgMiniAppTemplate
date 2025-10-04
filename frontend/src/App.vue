@@ -1,13 +1,14 @@
 <script setup>
 import BottomDock from '@/components/BottomDock.vue'
-import { onMounted } from 'vue'
 import { apiClient } from '@/api/client.js'
 import { isTgEnv, WebApp } from '@/main.js'
 import { useRoute, useRouter } from 'vue-router'
+import { onBeforeMount } from 'vue'
+
 const route = useRoute()
 const router = useRouter()
 
-onMounted(async () => {
+onBeforeMount(async () => {
   try {
     if (route.name === 'NeedAuth') return
 
@@ -22,14 +23,13 @@ onMounted(async () => {
     }
 
     if (!apiClient.getAccessToken()) {
-      return await router.push('/need_auth')
+      await router.replace('/need_auth')
     }
 
     await apiClient.check()
-    WebApp.ready()
   } catch (err) {
     console.log(err)
-    await router.push('/need_auth')
+    await router.replace('/need_auth')
   }
 })
 </script>
