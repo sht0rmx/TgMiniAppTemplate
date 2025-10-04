@@ -3,7 +3,7 @@
     "home": {
       "header": "Home",
       "title": "TG MiniApp Example",
-      "description": "This is a simple repository that can be used as a starting point for your project. The template is based on VueJs. It also includes a UI library and an icon pack. For convenience, this template uses PocketBase as a Go backend. To communicate with the Telegram API, the PyTelegramBotApi library is used.",
+      "description": "This is a simple repository that can be used as a starting point for your project. The template is based on Vue.js and includes a UI library and a set of icons.\nFor convenience, the template uses an ORM client for PostgreSQL and MinIO as an S3-compatible data storage, which can later be integrated with the database.\nExpress.js is used to handle API endpoints, and AioGram (Python) is used to interact with the Telegram API.",
       "hint": "To check the API status, you can open the settings tab via the dock button or by clicking the button.",
       "button": "Open Settings"
     },

@@ -70,3 +70,4 @@ volumes:
   bot_data:
   db_pg_data:
   minio_data:
+    driver: local
