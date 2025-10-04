@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { AppDataSource } from "../database/index.js";
 import { RefreshSession } from "../database/entities/RefreshSession.js";
+import {stringify} from "uuid";
+
 
 export async function authMiddleware(req, res, next) {
     const authHeader = req.headers["authorization"];
@@ -10,6 +12,19 @@ export async function authMiddleware(req, res, next) {
     }
 
     const token = authHeader.split(" ")[1];
+
+    if (process.env.API_TOKEN_HASH && token.startsWith("sk_")) {
+        const hash = crypto.createHash("sha256").update(token).digest("hex");
+            if (crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(process.env.API_TOKEN_HASH))) {
+                req.user = { role: "admin", telegram_id: stringify(process.env.BOT_TOKEN).split(":")[0] };
+                req.session = null;
+                req.role = "admin";
+                next();
+            } else {
+                return res.status(401).json({ detail: "Invalid APIkey" });
+            }
+    }
+
     let payload;
     try {
         payload = jwt.verify(token, process.env.JWT_SECRET);

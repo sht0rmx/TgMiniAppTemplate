@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "dev": "nodemon src/index.js",
-        "gen docs": "node src/swagger-gen.js"
+        "gen docs": "node src/swagger-gen.js",
+        "gen secrets": "node src/secrets-gen.js"
     },
     "keywords": [],
     "author": "",
