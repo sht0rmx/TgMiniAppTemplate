@@ -1,8 +1,7 @@
 import logging
-from logging.handlers import RotatingFileHandler
 import os
-
 from dataclasses import dataclass
+from logging.handlers import RotatingFileHandler
 
 
 @dataclass

@@ -12,7 +12,9 @@ const JWT_ALG = process.env.JWT_ALG || "HS256";
 
 export class AuthService {
     constructor() {
+        this.apiKeyHash = process.env.API_TOKEN_HASH;
     }
+
 
     makeFingerprintToken(ua = "", ip = "") {
         const rnd = crypto.randomBytes(16).toString("hex");
@@ -191,8 +193,10 @@ export class AuthService {
         );
     }
 
-    checkAdminToken(token) {
-        return token === process.env.API_TOKEN;
+    checkApiKey(rawKey) {
+        if (!rawKey) return false;
+        const hash = crypto.createHash("sha256").update(rawKey).digest("hex");
+        return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(this.apiKeyHash));
     }
 
     async checkValidateInitData(hashStr, initData, token, cStr = "WebAppData") {

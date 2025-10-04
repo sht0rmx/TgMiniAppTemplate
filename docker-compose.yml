@@ -47,11 +47,27 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_pgdata:/var/lib/postgresql/data
+      - db_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
     restart: unless-stopped
 
 volumes:
   frontend_data:
   backend_data:
   bot_data:
-  db_pgdata:
+  db_pg_data:
+  minio_data:
+    driver: local

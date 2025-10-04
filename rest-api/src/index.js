@@ -10,7 +10,8 @@ import v1Router from "./v1/routes/index.js";
 import v1AuthRouter from "./v1/routes/auth/index.js";
 import v1TokenRouter from "./v1/routes/tokens.js";
 import { AppDataSource } from "./database/index.js";
-import {RefreshSession} from "./database/entities/RefreshSession.js";
+import { RefreshSession } from "./database/entities/RefreshSession.js";
+import { storageClient } from "./minio/client.js";
 
 const app = express();
 
@@ -19,15 +20,14 @@ const HOST = process.env.HOST || "localhost";
 
 const corsOptions = {
   origin: [
-      "https://jlj73h8b-5173.euw.devtunnels.ms",
-    "http://192.168.31.140:5173",
-    "http://127.19.0.1:5173",
+    "https://jlj73h8b-5173.euw.devtunnels.ms",
     "https://miniapp.snipla.com"
   ],
   credentials: true,
   optionsSuccessStatus: 200,
 };
 
+console.log("API: alowed origins: ", corsOptions.origin);
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -49,14 +49,12 @@ app.use("/api/v1", v1Router);
 app.use("/api/v1/auth", v1AuthRouter);
 app.use("/api/v1/auth/token", v1TokenRouter);
 
+
 AppDataSource.initialize()
   .then(() => {
-    console.log("Database connected");
-    app.listen(PORT, HOST, () => {
-      console.log(`API is listening on ${HOST}:${PORT}`);
-    });
+    console.log("DB: connected");
 
-    setInterval(async () => {
+    const clearSessions = async () => {
       try {
         const sessionRepo = AppDataSource.getRepository(RefreshSession);
         await sessionRepo
@@ -64,11 +62,20 @@ AppDataSource.initialize()
           .delete()
           .where("expiresIn < :now OR revoked = true", { now: new Date() })
           .execute();
-        console.log("Old sessions cleaned up");
+        console.log("DB: old sessions cleaned up");
       } catch (err) {
-        console.error("Session cleanup error:", err);
+        console.error("DB: session cleanup error:", err);
       }
-    }, 1000 * 60 * 60);
+    };
+
+    clearSessions().then(r => null);
+    setInterval(clearSessions, 1000 * 60 * 60);
+
+    storageClient.init().then(r => null)
+
+    app.listen(PORT, HOST, () => {
+      console.log(`API: listening on ${HOST}:${PORT}`);
+    });
   })
   .catch((err) => {
     console.error("DB init error:", err);
