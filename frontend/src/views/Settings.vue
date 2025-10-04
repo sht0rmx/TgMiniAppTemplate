@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supported } from '@/locales/index.js'
+import DropDownSelect from '@/components/DropDownSelect.vue'
 import { apiClient } from '@/api/client.js'
 import { useUserStore } from '@/store/user.js'
 import { isTgEnv } from '@/main.js'
@@ -14,17 +15,18 @@ const statusAuth = ref('other.load')
 const username = ref('')
 const store = useUserStore()
 
-const { locale, t } = useI18n()
-const router = useRouter()
-
 const isLogged = ref(!!apiClient.getAccessToken())
 
-function setLang(l) {
-  if (l === locale.value) return
-  locale.value = l
-  document.cookie = `lang=${l};path=/;max-age=31536000`
-}
+const { locale, t } = useI18n()
+const router = useRouter()
+const localeValue = ref(locale.value)
 
+watch(localeValue, (val) => {
+  if (val !== locale.value) {
+    locale.value = val
+    document.cookie = `lang=${val};path=/;max-age=31536000`
+  }
+})
 async function handleLogout() {
   await apiClient.logout()
   isLogged.value = false
@@ -75,6 +77,7 @@ onMounted(() => {
   </div>
 
   <div class="flex flex-col w-full max-w mx-auto p-2 mb-8 gap-6">
+
     <div>
       <div class="flex flex-col space-y-2 mb-2 ml-1">
         <h2 class="text-sm font-semibold">{{ t('views.settings.general.name') }}</h2>
@@ -84,45 +87,26 @@ onMounted(() => {
           <span class="list-row items-center flex w-full">
             <i class="ri-translate text-3xl"></i>
             <div class="flex-1">{{ t('views.settings.general.language') }}</div>
-            <div class="dropdown dropdown-end">
-              <div tabindex="0" role="button" class="btn m-1 flex items-center gap-2">
-                <span>{{ t(`lang_select.${locale}`) }}</span>
-                <i class="ri-arrow-down-s-line leading-none"></i>
-              </div>
-              <ul
-                tabindex="0"
-                class="dropdown-content menu bg-base-300 rounded-box z-1 w-max min-w-[6rem] p-2 shadow-xl"
-              >
-                <li v-for="l in supported" :key="l">
-                  <button
-                    class="w-full text-left"
-                    :class="l === locale ? 'bg-accent text-gray-900 pointer-events-none' : ''"
-                    @click="setLang(l)"
-                  >
-                    {{ t(`lang_select.${l}`) }}
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <DropDownSelect
+              v-model="localeValue"
+              :items="supported"
+              :labelFn="(l) => t(`lang_select.${l}`)"
+            />
           </span>
         </li>
       </ul>
     </div>
+
     <div>
       <div class="flex flex-col space-y-2 mb-2 ml-1">
         <h2 class="text-sm font-semibold">{{ t('views.settings.additional.name') }}</h2>
       </div>
       <ul class="list bg-base-100 rounded-box shadow-md w-full relative hover:bg-base-200">
         <li>
-          <a
-            href="https://github.com/sht0rmx/TgMiniAppTemplate"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="list-row items-center flex w-full"
-          >
-            <i class="ri-github-fill text-3xl"></i>
+            <a href="https://github.com/sht0rmx/TgMiniAppTemplate" target="_blank" rel="noopener noreferrer" class="list-row items-center flex w-full">
+            <i class="ri-github-fill text-3xl"/>
             <div class="flex-1">{{ t('views.settings.additional.authors') }}</div>
-            <i class="ri-arrow-right-s-line"></i>
+            <i class="ri-arrow-right-s-line"/>
           </a>
         </li>
       </ul>
@@ -134,33 +118,30 @@ onMounted(() => {
       </div>
       <ul class="list bg-error rounded-box shadow-md w-full relative hover:bg-warning">
         <li>
-          <a
-            @click="handleLogout"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="list-row items-center flex w-full"
-          >
-            <i class="ri-logout-box-line text-3xl text-gray-950"></i>
+          <a @click="handleLogout" target="_blank" rel="noopener noreferrer" class="list-row items-center flex w-full">
+            <i class="ri-logout-box-line text-3xl text-gray-950"/>
             <div class="flex-1 text-gray-950">{{ t('views.settings.danger.logout') }}</div>
-            <i class="ri-arrow-right-s-line text-gray-950"></i>
+            <i class="ri-arrow-right-s-line text-gray-950"/>
           </a>
         </li>
       </ul>
     </div>
+
   </div>
 
   <div class="text-center items-center text-sm text-gray-400 mt-5 space-y-2">
     {{ t('views.settings.end_hint') }}
   </div>
 
-  <div
-    class="text-center items-center text-sm text-gray-400 mt-2 space-x-2 flex justify-center gap-2"
-  >
+  <div class="text-center items-center text-sm text-gray-400 mt-2 space-x-2 flex justify-center gap-2">
+
     <div class="badge badge-sm cursor-pointer" :class="badgeDb" @click="fetchStatus()">
       {{ t(statusDb) }}
     </div>
+
     <div class="badge badge-sm cursor-pointer" :class="badgeAuth" @click="checkAuth()">
       {{ t(statusAuth) }} {{ username }}
     </div>
+
   </div>
 </template>

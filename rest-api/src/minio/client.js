@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-import minio from "minio";
+import * as minio from 'minio'
 
 class Client {
     constructor() {
@@ -11,23 +11,24 @@ class Client {
             endPoint: process.env.MINIO_HOST,
             port: process.env.MINIO_PORT,
             useSSL: false,
-            accessKey: process.env.MINIO_USER,
+            accessKey: process.env.MINIO_USERNAME,
             secretKey: process.env.MINIO_PASSWORD
         });
-        this.init().then(r => null);
     }
 
     async init() {
+        console.log("MinIO: initialisation...");
         try {
             const exists = await this.client.bucketExists(this.bucket);
             if (!exists) {
                 await this.client.makeBucket(this.bucket, 'us-east-1');
-                console.log(`Bucket created: ${this.bucket}`);
+                console.log(`MinIO: bucket created: ${this.bucket}`);
             } else {
-                console.log(`Bucket exists: ${this.bucket}`);
+                console.log(`MinIO: bucket exists: ${this.bucket}`);
             }
+            console.log("MinIO: successfully connected!");
         } catch (err) {
-            console.error('MinIO init error:', err);
+            console.error('MinIO: init error:', err);
         }
     }
 

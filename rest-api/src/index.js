@@ -10,7 +10,8 @@ import v1Router from "./v1/routes/index.js";
 import v1AuthRouter from "./v1/routes/auth/index.js";
 import v1TokenRouter from "./v1/routes/tokens.js";
 import { AppDataSource } from "./database/index.js";
-import {RefreshSession} from "./database/entities/RefreshSession.js";
+import { RefreshSession } from "./database/entities/RefreshSession.js";
+import { storageClient } from "./minio/client.js";
 
 const app = express();
 
@@ -25,6 +26,8 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
 };
+
+console.log("API: alowed origins: ", corsOptions.origin);
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -49,7 +52,7 @@ app.use("/api/v1/auth/token", v1TokenRouter);
 
 AppDataSource.initialize()
   .then(() => {
-    console.log("Database connected");
+    console.log("DB: connected");
 
     const clearSessions = async () => {
       try {
@@ -59,18 +62,19 @@ AppDataSource.initialize()
           .delete()
           .where("expiresIn < :now OR revoked = true", { now: new Date() })
           .execute();
-        console.log("Old sessions cleaned up");
+        console.log("DB: old sessions cleaned up");
       } catch (err) {
-        console.error("Session cleanup error:", err);
+        console.error("DB: session cleanup error:", err);
       }
     };
 
     clearSessions().then(r => null);
-
     setInterval(clearSessions, 1000 * 60 * 60);
 
+    storageClient.init().then(r => null)
+
     app.listen(PORT, HOST, () => {
-      console.log(`API is listening on ${HOST}:${PORT}`);
+      console.log(`API: listening on ${HOST}:${PORT}`);
     });
   })
   .catch((err) => {
