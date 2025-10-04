@@ -5,6 +5,7 @@ import { createApp } from 'vue'
 // import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
 import { createPinia } from 'pinia'
+import piniaPersistedstate from 'pinia-plugin-persistedstate'
 
 import App from './App.vue'
 import router from './router'
@@ -50,6 +51,7 @@ if (window?.Telegram?.WebApp) {
 }
 
 const pinia = createPinia()
+pinia.use(piniaPersistedstate)
 
 const app = createApp(App)
 
