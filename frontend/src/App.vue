@@ -1,37 +1,6 @@
 <script setup>
 import BottomDock from '@/components/BottomDock.vue'
-import { apiClient } from '@/api/client.js'
-import { isTgEnv, WebApp } from '@/main.js'
-import { useRoute, useRouter } from 'vue-router'
-import { onBeforeMount } from 'vue'
-
-const route = useRoute()
-const router = useRouter()
-
-onBeforeMount(async () => {
-  try {
-    if (route.name === 'NeedAuth') return
-
-    await apiClient.ping()
-
-    if (!apiClient.getAccessToken()) {
-      await apiClient.refreshTokens()
-    }
-
-    if (!apiClient.getAccessToken() && isTgEnv) {
-      await apiClient.login(WebApp.initData)
-    }
-
-    if (!apiClient.getAccessToken()) {
-      await router.replace('/need_auth')
-    }
-
-    await apiClient.check()
-  } catch (err) {
-    console.log(err)
-    await router.replace('/need_auth')
-  }
-})
+import UpdatePopup from '@/components/UpdatePopup.vue'
 </script>
 
 <template>
@@ -49,7 +18,8 @@ onBeforeMount(async () => {
         <router-view />
       </div>
     </main>
-
+    <UpdatePopup />
+    <div/>
     <BottomDock v-if="$route.name !== 'NeedAuth'" />
   </div>
 </template>

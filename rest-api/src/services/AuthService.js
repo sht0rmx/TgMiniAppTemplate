@@ -13,6 +13,7 @@ const JWT_ALG = process.env.JWT_ALG || "HS256";
 export class AuthService {
     constructor() {
         this.apiKeyHash = process.env.API_TOKEN_HASH;
+        this.HMAC_SECRET = process.env.HMAC_SECRET;
     }
 
 
@@ -30,7 +31,6 @@ export class AuthService {
             if (!rnd || !sig) return false;
             const base = `${ua}|${ip}|${rnd}`;
             const want = crypto.createHmac("sha256", FP_SECRET).update(base).digest("hex");
-            // timing-safe compare
             return crypto.timingSafeEqual(Buffer.from(want), Buffer.from(sig));
         } catch (e) {
             return false;
@@ -74,8 +74,8 @@ export class AuthService {
         return await this.createSession(user, ua, ip, fpToken);
     }
 
-
     async reuseSession(session, user) {
+        console.log(1)
         const sessionRepo = AppDataSource.getRepository(RefreshSession);
 
         session.lastUsed = new Date();
@@ -99,19 +99,20 @@ export class AuthService {
     }
 
     async createSession(user, ua, ip, fpToken) {
+        console.log(2)
         const sessionRepo = AppDataSource.getRepository(RefreshSession);
 
         if (!user.id) {
             const userRepo = AppDataSource.getRepository(User);
-            user = await userRepo.save(user); // гарантируем наличие id
+            user = await userRepo.save(user);
         }
 
         const refreshRaw = uuid_v4();
-        const refreshHash = await bcrypt.hash(refreshRaw, 10);
+        const refreshHash = await this.hashToken(refreshRaw);
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
         const session = sessionRepo.create({
-            userId: user.id, // теперь точно есть
+            userId: user.id,
             refreshTokenHash: refreshHash,
             fingerprint: this.fingerprintHash(fpToken || ""),
             user_agent: ua,
@@ -120,6 +121,8 @@ export class AuthService {
             revoked: false,
             lastUsed: new Date(),
         });
+
+        console.log(session);
 
         await sessionRepo.save(session);
 
@@ -135,24 +138,27 @@ export class AuthService {
         };
     }
 
+    async hashToken(token) {
+        console.log(3, token, this.HMAC_SECRET);
+        let hash = crypto.createHmac("sha256", this.HMAC_SECRET).update(token).digest("hex");
+        console.log(hash);
+        return hash
+    }
 
     async refreshTokens(refreshRaw, fpToken) {
         const sessionRepo = AppDataSource.getRepository(RefreshSession);
 
-        const sessions = await sessionRepo.find({where: {}, relations: ["user"]});
-        let found = null;
-        for (const s of sessions) {
-            const ok = await bcrypt.compare(refreshRaw, s.refreshTokenHash);
-            if (ok) {
-                found = s;
-                break;
-            }
-        }
-        if (!found) throw new Error("Invalid refresh token");
+        const tokenHash = this.hashToken(refreshRaw);
 
+        const found = await sessionRepo.findOne({
+            where: {refreshTokenHash: tokenHash},
+            relations: ["user"],
+        });
+
+        if (!found) throw new Error("Invalid refresh token");
         if (found.revoked) throw new Error("Refresh revoked");
 
-        const expectedFpHash = this.fingerprintHash(fpToken);
+        const expectedFpHash = crypto.createHmac("sha256", HMAC_SECRET).update(fpToken).digest("hex");
         if (found.fingerprint !== expectedFpHash) {
             found.revoked = true;
             await sessionRepo.save(found);
@@ -165,7 +171,7 @@ export class AuthService {
         }
 
         const newRefreshRaw = uuid_v4();
-        found.refreshTokenHash = await bcrypt.hash(newRefreshRaw, 10);
+        found.refreshTokenHash = this.hashToken(newRefreshRaw);
         found.expiresIn = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         found.lastUsed = new Date();
         await sessionRepo.save(found);

@@ -1,7 +1,7 @@
 <script>
 import { ref } from 'vue'
 
-const show = ref(true)
+const show = ref(false)
 let updateSWCallback = null
 
 function update() {
@@ -26,18 +26,18 @@ export default {
 </script>
 
 <template>
-  <div v-if="show" class="fixed bottom-4 right-4 z-50">
-    <div role="alert" class="alert alert-info shadow-lg flex items-center gap-4">
+  <div v-if="show" class="fixed bottom-4 z-50 px-4">
+    <div role="alert" class="alert alert-info shadow-lg flex items-center gap-4 rounded-3xl">
       <i class="ri-refresh-line text-2xl"></i>
       <div class="flex-1">
         <span>{{ $t('components.popup.text') }}</span>
       </div>
       <div class="flex-none flex gap-2">
         <button class="btn btn-sm btn-primary" @click="update">
-          {{ $t('components.popup.update') }}
+          <i class="ri-refresh-line"></i>
         </button>
         <button class="btn btn-sm btn-ghost" @click="close">
-          {{ $t('components.popup.close') }}
+          <i class="ri-close-line"></i>
         </button>
       </div>
     </div>

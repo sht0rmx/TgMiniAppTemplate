@@ -19,6 +19,7 @@ router.post("/refresh", async (req, res) => {
 
         const ua = req.headers["user-agent"] || "web";
 
+
         const {user, tokens} = await authService.refreshTokens(refreshToken, fpToken, ua);
 
         res.cookie("refreshToken", tokens.refresh_token, {

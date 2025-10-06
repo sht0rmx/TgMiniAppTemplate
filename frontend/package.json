@@ -15,6 +15,7 @@
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@tailwindcss/vite": "^4.1.12",
+    "@types/telegram-web-app": "^9.0.0",
     "axios": "^1.12.2",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@types/estree": "^1.0.8",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/language-server": "^3.1.0",
     "daisyui": "^5.0.54",
     "eruda": "^3.4.3",
     "prettier": "3.6.2",

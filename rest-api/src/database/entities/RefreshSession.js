@@ -12,11 +12,11 @@ export const RefreshSession = new EntitySchema({
     userId: {
       type: "uuid",
     },
-    // store bcrypt hash of refresh token
     refreshTokenHash: {
       type: "varchar",
       length: 200,
       nullable: false,
+      unique: true,
     },
     user_agent: {
       type: "varchar",

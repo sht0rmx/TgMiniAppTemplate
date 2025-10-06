@@ -109,6 +109,13 @@ onMounted(() => {
             <i class="ri-arrow-right-s-line"/>
           </a>
         </li>
+        <li v-if="isLogged && isTgEnv">
+          <a class="list-row items-center flex w-full" @click="$router.push('/settings/devices')">
+            <i class="ri-device-line text-3xl"/>
+            <div class="flex-1">{{ t('views.settings.additional.devices') }}</div>
+            <i class="ri-arrow-right-s-line"/>
+          </a>
+        </li>
       </ul>
     </div>
 

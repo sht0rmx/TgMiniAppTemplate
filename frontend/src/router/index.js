@@ -2,11 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { i18n } from '@/locales/index.js'
 
 import Home from '@/views/Home.vue'
-import NeedAuthView from '@/views/NeedAuth.vue'
+import NeedTgView from '@/views/Errors/NeedTg.vue'
 import Settings from '@/views/Settings.vue'
-import NotFoundView from '@/views/NotFound.vue'
+import NotFoundView from '@/views/Errors/NotFound.vue'
 
 import { isTgEnv, WebApp } from '@/main.js'
+import Devices from '@/views/Devices.vue'
+import NeedAuth from '@/views/Errors/NeedAuth.vue'
 
 const routes = [
   {
@@ -16,10 +18,16 @@ const routes = [
     meta: { titleKey: 'views.home.header' },
   },
   {
-    path: '/need_auth',
-    name: 'NeedAuth',
-    component: NeedAuthView,
+    path: '/need_tg',
+    name: 'NeedTg',
+    component: NeedTgView,
     meta: { titleKey: 'views.need_auth.header' },
+  },
+  {
+    path: '/unauthorized',
+    name: 'Unauthorized',
+    component: NeedAuth,
+    meta: { titleKey: 'views.not_found.code.401.header' },
   },
   {
     path: '/settings',
@@ -28,10 +36,16 @@ const routes = [
     meta: { titleKey: 'views.settings.header' },
   },
   {
+    path: '/settings/devices',
+    name: 'Devices',
+    component: Devices,
+    meta: { titleKey: 'views.devices.header' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFoundView,
-    meta: { titleKey: 'views.not_found.header' },
+    meta: { titleKey: 'views.not_found.code.404.header' },
   },
 ]
 
@@ -45,7 +59,7 @@ router.afterEach((to) => {
   if (key) {
     document.title = i18n.global.t(key)
   }
-  if (["/", "/need_auth"].includes(to.path)) {
+  if (["/", "/need_tg"].includes(to.path)) {
     WebApp.BackButton.hide()
   } else {
     WebApp.BackButton.show()
@@ -53,8 +67,8 @@ router.afterEach((to) => {
 })
 
 router.beforeEach((to, _, next) => {
-  if (!isTgEnv && to.path !== '/need_auth') {
-    return next('/need_auth')
+  if (!isTgEnv && ["/need_tg"].includes(to.path)) {
+    return next('/need_tg')
   }
   next()
 })
