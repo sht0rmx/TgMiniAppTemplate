@@ -1,10 +1,16 @@
 <script setup>
-import BottomDock from '@/components/BottomDock.vue'
+import { onMounted } from 'vue'
 import UpdatePopup from '@/components/UpdatePopup.vue'
+import BottomDock from '@/components/BottomDock.vue'
+import { isLoading } from '@/main.js'
+import SplashScreen from '@/components/SplashScreen.vue'
+
 </script>
 
 <template>
-  <div
+  <SplashScreen v-if="isLoading" />
+
+  <div v-else
     class="app-container"
     :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name !== 'NeedAuth' }]"
   >
@@ -19,7 +25,6 @@ import UpdatePopup from '@/components/UpdatePopup.vue'
       </div>
     </main>
     <UpdatePopup />
-    <div/>
     <BottomDock v-if="$route.name !== 'NeedAuth'" />
   </div>
 </template>

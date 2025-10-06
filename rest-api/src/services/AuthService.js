@@ -148,7 +148,7 @@ export class AuthService {
     async refreshTokens(refreshRaw, fpToken) {
         const sessionRepo = AppDataSource.getRepository(RefreshSession);
 
-        const tokenHash = this.hashToken(refreshRaw);
+        const tokenHash = await this.hashToken(refreshRaw);
 
         const found = await sessionRepo.findOne({
             where: {refreshTokenHash: tokenHash},
@@ -158,7 +158,7 @@ export class AuthService {
         if (!found) throw new Error("Invalid refresh token");
         if (found.revoked) throw new Error("Refresh revoked");
 
-        const expectedFpHash = crypto.createHmac("sha256", HMAC_SECRET).update(fpToken).digest("hex");
+        const expectedFpHash = this.fingerprintHash(fpToken)
         if (found.fingerprint !== expectedFpHash) {
             found.revoked = true;
             await sessionRepo.save(found);
@@ -171,7 +171,7 @@ export class AuthService {
         }
 
         const newRefreshRaw = uuid_v4();
-        found.refreshTokenHash = this.hashToken(newRefreshRaw);
+        found.refreshTokenHash = await this.hashToken(newRefreshRaw);
         found.expiresIn = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         found.lastUsed = new Date();
         await sessionRepo.save(found);

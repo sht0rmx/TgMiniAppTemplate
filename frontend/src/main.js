@@ -5,12 +5,12 @@ import { createApp } from 'vue'
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
 import { createPinia } from 'pinia'
+import { ref } from 'vue'
 import piniaPersistedstate from 'pinia-plugin-persistedstate'
 
 import App from './App.vue'
 import router from './router'
 import { apiClient } from '@/api/client.js'
-
 import { notifyUpdate } from './components/UpdatePopup.vue'
 
 const updateSW = registerSW({
@@ -21,8 +21,9 @@ const updateSW = registerSW({
 
 export let isTgEnv = false
 export let WebApp = null
+export let isLoading = ref(true)
 
-async function initApp() {
+async function initAuth() {
   try {
     await apiClient.ping()
 
@@ -30,22 +31,21 @@ async function initApp() {
       await apiClient.refreshTokens()
     }
 
-    console.log(apiClient.getAccessToken())
-
     if (!apiClient.getAccessToken() && isTgEnv) {
       await apiClient.login(WebApp.initData)
     }
 
     if (!apiClient.getAccessToken()) {
       await router.replace('/need_auth')
+      return false
     } else {
       await apiClient.check()
-      window.dispatchEvent(new Event('app-ready'))
+      return true
     }
   } catch (err) {
     console.error('Auth init error:', err)
     await router.replace('/need_auth')
-    window.dispatchEvent(new Event('app-ready'))
+    return false
   }
 }
 
@@ -58,9 +58,6 @@ if (window?.Telegram?.WebApp) {
     console.log('Telegram environment detected')
 
     const isDesktop = WebApp.platform === 'tdesktop'
-    const openedFromInlineButton = !!WebApp.initDataUnsafe?.start_param
-    console.log(isDesktop, openedFromInlineButton)
-
     if (!isDesktop) {
       WebApp.disableVerticalSwipes()
       WebApp.requestFullscreen()
@@ -68,7 +65,6 @@ if (window?.Telegram?.WebApp) {
 
     WebApp.BackButton.show()
     WebApp.BackButton.onClick(() => router.back())
-
   } else {
     console.warn('Telegram.WebApp found, but no initData (probably opened in browser)')
   }
@@ -81,12 +77,13 @@ async function bootstrap() {
   const pinia = createPinia()
   pinia.use(piniaPersistedstate)
   app.use(pinia)
-
-  await initApp()
-
   app.use(i18n)
   app.use(router)
   app.mount('#app')
+  let ok = await initAuth()
+  console.log(ok)
+  isLoading.value = false
 }
 
-bootstrap().then((r) => null)
+
+bootstrap()
