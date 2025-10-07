@@ -1,5 +1,6 @@
 <script setup lang="js">
 import { useRouter } from 'vue-router'
+import { Button } from '@/components/ui/button/index.js'
 
 const router = useRouter()
 
@@ -15,9 +16,7 @@ function gotoSettings() {
     <p class="text-gray-400 text-base max-w-lg text-center">
       {{ $t('views.home.description') }}
     </p>
-    <button class="btn btn-soft btn-accent px-8 mt-6" @click="gotoSettings()">
-      {{ $t('views.home.button') }}
-    </button>
+    <Button class="px-8 mt-6" @click="gotoSettings()">{{ $t('views.home.button') }}</Button>
     <p class="text-gray-600 text-sm max-w-xs text-center my-1">
       {{ $t('views.home.hint') }}
     </p>

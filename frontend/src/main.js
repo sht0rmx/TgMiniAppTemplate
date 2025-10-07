@@ -1,13 +1,11 @@
 import 'remixicon/fonts/remixicon.css'
 import '@/assets/main.css'
 
-import { createApp } from 'vue'
+import { createApp, ref } from 'vue'
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from '@/locales/index.js'
 import { createPinia } from 'pinia'
-import { ref } from 'vue'
 import piniaPersistedstate from 'pinia-plugin-persistedstate'
-
 import App from './App.vue'
 import router from './router'
 import { apiClient } from '@/api/client.js'
@@ -23,6 +21,20 @@ export let isTgEnv = false
 export let WebApp = null
 export let isLoading = ref(true)
 
+const sysDark = window.matchMedia('(prefers-color-scheme: dark)')
+
+function setTheme(isDark) {
+  if (isDark) {
+    document.documentElement.classList.add('dark')
+    document.documentElement.setAttribute('data-theme', 'dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+    document.documentElement.setAttribute('data-theme', 'light')
+  }
+}
+
+sysDark.addEventListener('change', e => setTheme(e.matches))
+
 async function initAuth() {
   try {
     await apiClient.ping()
@@ -36,7 +48,6 @@ async function initAuth() {
     }
 
     if (!apiClient.getAccessToken()) {
-      await router.replace('/need_auth')
       return false
     } else {
       await apiClient.check()
@@ -44,7 +55,6 @@ async function initAuth() {
     }
   } catch (err) {
     console.error('Auth init error:', err)
-    await router.replace('/need_auth')
     return false
   }
 }
@@ -79,11 +89,23 @@ async function bootstrap() {
   app.use(pinia)
   app.use(i18n)
   app.use(router)
+
+  setTheme(sysDark.matches)
+
   app.mount('#app')
-  let ok = await initAuth()
-  console.log(ok)
+
+  // const ok = await initAuth()
+  // const current = router.currentRoute.value.name
+  //
+  // if (!ok && !isTgEnv && !['need_tg', 'unauthorized'].includes(current)) {
+  //   await router.push('/need_tg')
+  // }
+  // if (!ok && isTgEnv && !['need_tg', 'unauthorized'].includes(current)) {
+  //   await router.push('/unauthorized')
+  // }
+
+  // console.log('Auth OK:', ok)
   isLoading.value = false
 }
-
 
 bootstrap()

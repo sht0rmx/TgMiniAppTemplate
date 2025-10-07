@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { Button } from '@/components/ui/button'
 import UpdatePopup from '@/components/UpdatePopup.vue'
 import BottomDock from '@/components/BottomDock.vue'
 import { isLoading } from '@/main.js'
@@ -9,17 +9,8 @@ import SplashScreen from '@/components/SplashScreen.vue'
 
 <template>
   <SplashScreen v-if="isLoading" />
-
-  <div v-else
-    class="app-container"
-    :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name !== 'NeedAuth' }]"
-  >
-    <main
-      :class="[
-        'flex-1 text-sm text-base-content flex justify-center',
-        { 'p-4': $route.name !== 'NeedAuth' },
-      ]"
-    >
+  <div v-else class="app-container" :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name !== 'NeedAuth' }]">
+    <main :class="['flex-1 text-sm text-base-content flex justify-center', { 'p-4': $route.name !== 'NeedAuth' },]">
       <div :class="['w-full', $route.name === 'NeedAuth' ? 'max-w-sm' : 'max-w-2xl']">
         <router-view />
       </div>
