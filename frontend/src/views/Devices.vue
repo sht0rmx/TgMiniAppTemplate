@@ -11,4 +11,5 @@
         {{ t('views.devices.hint') }}
       </p>
     </div>
+  </div>
 </template>
