@@ -222,3 +222,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.list-item {
+  @apply flex items-center w-full px-5 py-3 text-left;
+}

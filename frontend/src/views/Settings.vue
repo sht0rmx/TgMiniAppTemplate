@@ -9,14 +9,13 @@ import { isTgEnv } from '@/main'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { ButtonGroup } from '@/components/ui/button-group'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
+import List from '@/components/ui/list/List.vue'
 
 const router = useRouter()
 const store = useUserStore()
@@ -100,92 +99,69 @@ onMounted(() => {
       </p>
     </div>
 
-    <section class="space-y-1">
-      <h2 class="text-sm font-semibold tracking-wide text-muted-foreground">
-        {{ t('views.settings.general.name') }}
-      </h2>
+    <List :title="t('views.settings.general.name')">
+      <div class="list-item justify-between">
+            <div class="flex items-center gap-3">
+              <i class="ri-translate text-2xl"></i>
+              <span class="text-sm font-medium">
+                {{ t('views.settings.general.language') }}
+              </span>
+            </div>
 
-      <Card class="shadow-sm border rounded-2xl">
-        <div class="flex items-center justify-between px-5">
-          <div class="flex items-center gap-3">
-            <i class="ri-translate text-2xl text-muted-foreground"></i>
-            <span class="text-sm font-medium">
-              {{ t('views.settings.general.language') }}
-            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button variant="outline" size="sm" class="gap-1 flex items-center">
+                  {{ t(`lang_select.${localeValue}`) }}
+                  <i class="ri-arrow-down-s-line text-lg"></i>
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" class="w-44">
+                <DropdownMenuItem
+                  v-for="lang in supported"
+                  :key="lang"
+                  @click="localeValue = lang"
+                  class="text-sm"
+                >
+                  {{ t(`lang_select.${lang}`) }}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+    </List>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="sm" class="gap-1 flex items-center">
-                {{ t(`lang_select.${localeValue}`) }}
-                <i class="ri-arrow-down-s-line text-lg"></i>
-              </Button>
-            </DropdownMenuTrigger>
+    <List :title="t('views.settings.additional.name')">
+      <button
+            as="a"
+            href="https://github.com/sht0rmx/TgMiniAppTemplate"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="list-item"
+          >
+            <i class="ri-github-fill text-2xl mr-3"></i>
+            <span class="flex-1 text-sm font-medium">
+              {{ t('views.settings.additional.authors') }}
+            </span>
+            <i class="ri-arrow-right-s-line text-lg"></i>
+          </button>
+      <button v-if="isLogged && isTgEnv" class="list-item" @click="router.push('/settings/devices')">
+            <i class="ri-device-line text-2xl mr-3"></i>
+            <span class="flex-1 text-sm font-medium">
+              {{ t('views.settings.additional.devices') }}
+            </span>
+            <i class="ri-arrow-right-s-line text-lg"></i>
+          </button>
+    </List>
 
-            <DropdownMenuContent align="end" class="w-44">
-              <DropdownMenuItem
-                v-for="lang in supported"
-                :key="lang"
-                @click="localeValue = lang"
-                class="text-sm"
-              >
-                {{ t(`lang_select.${lang}`) }}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </Card>
-    </section>
-
-    <section class="space-y-1">
-      <h2 class="text-sm font-semibold tracking-wide text-muted-foreground">
-        {{ t('views.settings.additional.name') }}
-      </h2>
-
-      <Card class="shadow-sm border rounded-2xl divide-y">
-        <button
-          as="a"
-          href="https://github.com/sht0rmx/TgMiniAppTemplate"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center w-full px-5 text-left gap-3 pb-5"
-        >
-          <i class="ri-github-fill text-2xl text-muted-foreground"></i>
-          <span class="flex-1 text-sm font-medium">
-            {{ t('views.settings.additional.authors') }}
-          </span>
-          <i class="ri-arrow-right-s-line text-lg"></i>
-        </button>
-
-        <button
-          v-if="isLogged && isTgEnv"
-          class="flex items-center w-full px-5 text-left gap-3"
-          @click="router.push('/settings/devices')"
-        >
-          <i class="ri-device-line text-2xl text-muted-foreground"></i>
-          <span class="flex-1 text-sm font-medium">
-            {{ t('views.settings.additional.devices') }}
-          </span>
-          <i class="ri-arrow-right-s-line text-lg"></i>
-        </button>
-      </Card>
-    </section>
-
-    <section v-if="isLogged && !isTgEnv" class="space-y-3">
-      <h2 class="text-sm font-semibold">
-        {{ t('views.settings.danger.name') }}
-      </h2>
-
-      <Card class="shadow-sm rounded-2xl">
-        <button class="flex items-center w-full px-5 text-destructive" @click="handleLogout">
+    <List v-if="isLogged && !isTgEnv" :title="t('views.settings.danger.name')">
+      <button class="list-item" @click="handleLogout">
           <i class="ri-logout-box-line text-2xl mr-3"></i>
           <span class="flex-1 text-sm font-medium">
             {{ t('views.settings.danger.logout') }}
           </span>
           <i class="ri-arrow-right-s-line"></i>
         </button>
-      </Card>
-    </section>
+    </List>
 
     <div class="text-center text-sm text-muted-foreground mt-8">
       {{ t('views.settings.end_hint') }}

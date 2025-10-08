@@ -13,7 +13,7 @@ const items = [
 
 <template>
   <nav
-    class="fixed bottom-0 left-0 right-0 z-50 flex justify-around border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    class="fixed bottom-0 left-0 right-0 z-50 pt-2 flex justify-around border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     :style="{ paddingBottom: 'var(--tg-safe-area-inset-bottom, 0px)' }"
   >
     <button
@@ -22,7 +22,7 @@ const items = [
       @click="router.push(i.to)"
       class="flex flex-col items-center py-2 text-sm transition-colors hover:text-accent"
       :class="cn(
-        route.path === i.to
+        i.to.includes(route.path)
           ? 'text-primary'
           : 'text-muted-foreground'
       )"
