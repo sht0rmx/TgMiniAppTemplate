@@ -35,17 +35,19 @@ const closeSession = () => {
 </script>
 
 <template>
-  <div class="flex flex-col max-w-xl mx-auto py-10 space-y-8">
-    <div class="text-center space-y-2">
+  <div class="flex flex-col max-w-xl mx-auto space-y-8">
+    <div class="text-center space-y-1 mb-3">
       <i class="ri-mac-line text-8xl text-chart-3"></i>
       <h1 class="text-4xl font-bold">{{ $t('views.devices.header') }}</h1>
       <p class="text-muted-foreground text-sm">{{ $t('views.devices.hint') }}</p>
     </div>
 
-    <Button class="w-full">
+    <div class="flex w-full justify-center">
+    <Button class="w-3/4 py-6">
       <i class="ri-loader-3-line text-xl leading-none"></i>
       <span class="p-2 text-semibold">{{ $t('views.devices.link') }}</span>
     </Button>
+    </div>
 
     <List :title="$t('views.devices.this_device')">
       <button class="list-item" @click="openDrawer(d)">

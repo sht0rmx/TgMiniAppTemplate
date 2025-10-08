@@ -89,7 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col max-w-xl mx-auto py-10 space-y-8">
+  <div class="flex flex-col max-w-xl mx-auto space-y-8">
     <div class="text-left space-y-2">
       <h1 class="text-4xl font-bold">
         {{ t('views.settings.header') }}
@@ -101,66 +101,73 @@ onMounted(() => {
 
     <List :title="t('views.settings.general.name')">
       <div class="list-item justify-between">
-            <div class="flex items-center gap-3">
-              <i class="ri-translate text-2xl"></i>
-              <span class="text-sm font-medium">
-                {{ t('views.settings.general.language') }}
-              </span>
-            </div>
+        <div class="flex items-center gap-3">
+          <i class="ri-translate text-2xl"></i>
+          <span class="text-sm font-medium">
+            {{ t('views.settings.general.language') }}
+          </span>
+        </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <Button variant="outline" size="sm" class="gap-1 flex items-center">
-                  {{ t(`lang_select.${localeValue}`) }}
-                  <i class="ri-arrow-down-s-line text-lg"></i>
-                </Button>
-              </DropdownMenuTrigger>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="secondary" size="sm" class="gap-1 flex items-center text-accent border border-border">
+              {{ t(`lang_select.${localeValue}`) }}
+              <i class="ri-arrow-down-s-line text-lg"></i>
+            </Button>
+          </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end" class="w-44">
-                <DropdownMenuItem
-                  v-for="lang in supported"
-                  :key="lang"
-                  @click="localeValue = lang"
-                  class="text-sm"
-                >
-                  {{ t(`lang_select.${lang}`) }}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenuContent
+            align="end"
+            class="w-44 bg-card text-card-foreground border border-border rounded-md shadow-md"
+          >
+            <DropdownMenuItem
+              v-for="lang in supported"
+              :key="lang"
+              @click="localeValue = lang"
+              class="text-sm hover:bg-card-light hover:text-card-foreground"
+            >
+              {{ t(`lang_select.${lang}`) }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </List>
 
     <List :title="t('views.settings.additional.name')">
       <button
-            as="a"
-            href="https://github.com/sht0rmx/TgMiniAppTemplate"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="list-item"
-          >
-            <i class="ri-github-fill text-2xl mr-3"></i>
-            <span class="flex-1 text-sm font-medium">
-              {{ t('views.settings.additional.authors') }}
-            </span>
-            <i class="ri-arrow-right-s-line text-lg"></i>
-          </button>
-      <button v-if="isLogged && isTgEnv" class="list-item" @click="router.push('/settings/devices')">
-            <i class="ri-device-line text-2xl mr-3"></i>
-            <span class="flex-1 text-sm font-medium">
-              {{ t('views.settings.additional.devices') }}
-            </span>
-            <i class="ri-arrow-right-s-line text-lg"></i>
-          </button>
+        as="a"
+        href="https://github.com/sht0rmx/TgMiniAppTemplate"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="list-item"
+      >
+        <i class="ri-github-fill text-2xl mr-3"></i>
+        <span class="flex-1 text-sm font-medium">
+          {{ t('views.settings.additional.authors') }}
+        </span>
+        <i class="ri-arrow-right-s-line text-lg"></i>
+      </button>
+      <button
+        v-if="isLogged && isTgEnv"
+        class="list-item"
+        @click="router.push('/settings/devices')"
+      >
+        <i class="ri-device-line text-2xl mr-3"></i>
+        <span class="flex-1 text-sm font-medium">
+          {{ t('views.settings.additional.devices') }}
+        </span>
+        <i class="ri-arrow-right-s-line text-lg"></i>
+      </button>
     </List>
 
     <List v-if="isLogged && !isTgEnv" :title="t('views.settings.danger.name')">
       <button class="list-item" @click="handleLogout">
-          <i class="ri-logout-box-line text-2xl mr-3"></i>
-          <span class="flex-1 text-sm font-medium">
-            {{ t('views.settings.danger.logout') }}
-          </span>
-          <i class="ri-arrow-right-s-line"></i>
-        </button>
+        <i class="ri-logout-box-line text-2xl mr-3"></i>
+        <span class="flex-1 text-sm font-medium">
+          {{ t('views.settings.danger.logout') }}
+        </span>
+        <i class="ri-arrow-right-s-line"></i>
+      </button>
     </List>
 
     <div class="text-center text-sm text-muted-foreground mt-8">

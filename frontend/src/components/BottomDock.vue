@@ -7,25 +7,32 @@ const router = useRouter()
 
 const items = [
   { icon: 'ri-home-line', label: 'Home', to: '/' },
-  { icon: 'ri-settings-4-line', label: 'Settings', to: '/settings' }
+  { icon: 'ri-settings-4-line', label: 'Settings', to: '/settings' },
 ]
+
+const isActive = (itemTo) => {
+  if (itemTo === '/') {
+    return route.path === '/'
+  } else {
+    return route.path.startsWith(itemTo)
+  }
+}
 </script>
 
 <template>
   <nav
-    class="fixed bottom-0 left-0 right-0 z-50 pt-2 flex justify-around border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-    :style="{ paddingBottom: 'var(--tg-safe-area-inset-bottom, 0px)' }"
+    class="fixed bottom-0 left-0 right-0 z-50 pt-2 flex justify-around border-t border-border backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    :style="{
+      paddingBottom: 'var(--tg-safe-area-inset-bottom, 0px)',
+      backgroundColor: 'rgba(0, 0, 0, 0.15)' /* слегка затемнённый фон */,
+    }"
   >
     <button
       v-for="i in items"
       :key="i.to"
       @click="router.push(i.to)"
       class="flex flex-col items-center py-2 text-sm transition-colors hover:text-accent"
-      :class="cn(
-        i.to.includes(route.path)
-          ? 'text-primary'
-          : 'text-muted-foreground'
-      )"
+      :class="cn(isActive(i.to) ? 'text-primary' : 'text-muted-foreground')"
     >
       <i :class="[i.icon, 'text-xl leading-none']"></i>
       <span class="text-xs mt-0.5">{{ i.label }}</span>
@@ -33,11 +40,11 @@ const items = [
   </nav>
 </template>
 
-
 <style scoped>
 nav {
   bottom: var(--tg-safe-area-inset-bottom, 0px);
 }
+
 nav::after {
   content: '';
   position: absolute;

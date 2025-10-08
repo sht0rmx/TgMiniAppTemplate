@@ -8,11 +8,11 @@ const props = defineProps({
 
 <template>
   <section class="space-y-1">
-    <h2 v-if="title" class="text-sm font-semibold tracking-wide text-muted-foreground">
+    <h2 v-if="title" class="text-sm tracking-wide text-section-header uppercase">
       {{ title }}
     </h2>
 
-    <Card class="shadow-sm border rounded-2xl">
+    <Card class="rounded-2xl">
       <div class="divide-y flex flex-col">
         <slot />
       </div>
