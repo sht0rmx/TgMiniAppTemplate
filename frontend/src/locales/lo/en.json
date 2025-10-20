@@ -48,6 +48,11 @@
           "error": "Auth: error"
         }
       }
+    },
+    "devices": {
+      "header": "Devices",
+      "title": "Devices",
+      "hint": "manage your sessions"
     }
   },
   "components": {

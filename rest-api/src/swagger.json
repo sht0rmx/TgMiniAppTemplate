@@ -12,19 +12,52 @@
     "https"
   ],
   "paths": {
-    "/api/v1/ping": {
+    "/api/v1/auth/check": {
       "get": {
-        "description": "",
+        "tags": [
+          "Auth"
+        ],
+        "description": "get user data from JWT token and validate active session",
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/check/bot": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "validate apiToken",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
     },
     "/api/v1/auth/fingerprint/generate": {
       "get": {
-        "description": "",
+        "tags": [],
+        "description": "generate fingerprint for browser and set it in httpOnly cookie",
         "parameters": [
           {
             "name": "user-agent",
@@ -47,9 +80,10 @@
         }
       }
     },
-    "/api/v1/auth/webapp": {
+    "/api/v1/auth/login/webapp": {
       "post": {
-        "description": "",
+        "tags": [],
+        "description": "get session token by login with InitData param from TgMiniapp",
         "parameters": [
           {
             "name": "user-agent",
@@ -87,60 +121,10 @@
         }
       }
     },
-    "/api/v1/auth/check/bot": {
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/auth/check": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "user-agent",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
     "/api/v1/auth/token/refresh": {
-      "post": {
-        "description": "",
+      "get": {
+        "tags": [],
+        "description": "get access JWT token from session token & fingerprint",
         "parameters": [
           {
             "name": "user-agent",
@@ -159,8 +143,11 @@
       }
     },
     "/api/v1/auth/token/revoke": {
-      "post": {
-        "description": "",
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "close session and mark session token \"revoked\"",
         "responses": {
           "200": {
             "description": "OK"
@@ -168,6 +155,42 @@
           "400": {
             "description": "Bad Request"
           },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/ping": {
+      "get": {
+        "description": "check api health",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session/all_sessions": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "get all authorized sessions",
+        "responses": {
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/session/current": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "get current session",
+        "responses": {
           "500": {
             "description": "Internal Server Error"
           }

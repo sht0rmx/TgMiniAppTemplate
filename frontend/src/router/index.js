@@ -1,18 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { i18n } from '@/locales/index.js'
 
-import Home from '@/views/Home.vue'
-import NeedAuthView from '@/views/NeedAuth.vue'
-import Settings from '@/views/Settings.vue'
-import NotFoundView from '@/views/NotFound.vue'
+import HomeView from '@/views/Home.vue'
+import LoginView from '@/views/Login.vue'
+import NeedAuthView from '@/views/Errors/NeedAuth.vue'
+import SettingsView from '@/views/Settings.vue'
+import NotFoundView from '@/views/Errors/NotFound.vue'
+import DevicesView from '@/views/Devices.vue'
+import UnauthorizedView from '@/views/Errors/Unauthorized.vue'
 
 import { isTgEnv, WebApp } from '@/main.js'
+
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
+    component: HomeView,
     meta: { titleKey: 'views.home.header' },
   },
   {
@@ -22,16 +26,34 @@ const routes = [
     meta: { titleKey: 'views.need_auth.header' },
   },
   {
+    path: '/unauthorized',
+    name: 'Unauthorized',
+    component: UnauthorizedView,
+    meta: { titleKey: 'views.not_found.code.401.header' },
+  },
+  {
     path: '/settings',
     name: 'Settings',
-    component: Settings,
+    component: SettingsView,
     meta: { titleKey: 'views.settings.header' },
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginView,
+    meta: { titleKey: 'views.login.header' },
+  },
+  {
+    path: '/settings/devices',
+    name: 'Devices',
+    component: DevicesView,
+    meta: { titleKey: 'views.devices.header' },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFoundView,
-    meta: { titleKey: 'views.not_found.header' },
+    meta: { titleKey: 'views.not_found.code.404.header' },
   },
 ]
 
@@ -53,7 +75,7 @@ router.afterEach((to) => {
 })
 
 router.beforeEach((to, _, next) => {
-  if (!isTgEnv && to.path !== '/need_auth') {
+  if (!isTgEnv && !["/need_auth", "/login"].includes(to.path)) {
     return next('/need_auth')
   }
   next()

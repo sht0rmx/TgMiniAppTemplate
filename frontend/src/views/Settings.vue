@@ -1,25 +1,34 @@
-<script setup>
-import { ref, onMounted, watch } from 'vue'
+<script setup lang="ts">
+import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { supported } from '@/locales/index.js'
-import DropDownSelect from '@/components/DropDownSelect.vue'
-import { apiClient } from '@/api/client.js'
-import { useUserStore } from '@/store/user.js'
-import { isTgEnv } from '@/main.js'
+import { supported } from '@/locales'
+import { apiClient } from '@/api/client'
+import { useUserStore } from '@/store/user'
+import { isTgEnv } from '@/main'
 
-const badgeDb = ref('badge badge-outline badge-info')
-const badgeAuth = ref('badge badge-outline badge-info')
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import List from '@/components/ui/list/List.vue'
+
+const router = useRouter()
+const store = useUserStore()
+const { locale, t } = useI18n()
+
+const localeValue = ref(locale.value)
+const isLogged = ref(!!apiClient.getAccessToken())
+const username = ref('')
+
+const badgeDbVariant = ref<'default' | 'destructive' | 'secondary' | 'outline'>('outline')
+const badgeAuthVariant = ref<'default' | 'destructive' | 'secondary' | 'outline'>('outline')
 const statusDb = ref('other.load')
 const statusAuth = ref('other.load')
-const username = ref('')
-const store = useUserStore()
-
-const isLogged = ref(!!apiClient.getAccessToken())
-
-const { locale, t } = useI18n()
-const router = useRouter()
-const localeValue = ref(locale.value)
 
 watch(localeValue, (val) => {
   if (val !== locale.value) {
@@ -27,41 +36,50 @@ watch(localeValue, (val) => {
     document.cookie = `lang=${val};path=/;max-age=31536000`
   }
 })
-async function handleLogout() {
-  await apiClient.logout()
-  isLogged.value = false
-  await router.push('/need_auth')
-}
-
-async function checkAuth() {
-  await apiClient.check()
-  let user = store.user
-  if (user && user.id) {
-    username.value = user.username
-    badgeAuth.value = 'badge badge-success'
-    statusAuth.value = 'views.settings.badges.auth.ok'
-  } else {
-    username.value = ''
-    badgeAuth.value = 'badge badge-error'
-    statusAuth.value = 'views.settings.badges.auth.error'
-  }
-}
 
 async function fetchStatus() {
   try {
-    const status = await apiClient.ping()
-    if (status) {
-      badgeDb.value = 'badge badge-success'
-      statusDb.value = 'views.settings.badges.api.success'
-    } else {
-      badgeDb.value = 'badge badge-error'
-      statusDb.value = 'views.settings.badges.api.unavailable'
-    }
+    const ok = await apiClient.ping()
+    badgeDbVariant.value = ok ? 'default' : 'destructive'
+    statusDb.value = ok
+      ? 'views.settings.badges.api.success'
+      : 'views.settings.badges.api.unavailable'
   } catch (err) {
     console.error('ping failed:', err)
-    badgeDb.value = 'badge badge-warning'
+    badgeDbVariant.value = 'secondary'
     statusDb.value = 'views.settings.badges.api.error'
   }
+}
+
+async function checkAuth() {
+  try {
+    await apiClient.check()
+  } catch (err) {
+    console.error('check failed:', err)
+  }
+
+  const user = store.user
+  if (user?.id) {
+    username.value = user.username || ''
+    badgeAuthVariant.value = 'default'
+    statusAuth.value = 'views.settings.badges.auth.ok'
+    isLogged.value = true
+  } else {
+    username.value = ''
+    badgeAuthVariant.value = 'destructive'
+    statusAuth.value = 'views.settings.badges.auth.error'
+    isLogged.value = !!apiClient.getAccessToken()
+  }
+}
+
+async function handleLogout() {
+  try {
+    await apiClient.logout()
+  } catch (err) {
+    console.error('logout failed:', err)
+  }
+  isLogged.value = false
+  router.push('/need_auth')
 }
 
 onMounted(() => {
@@ -71,77 +89,100 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col space-y-2 mt-8 mb-8">
-    <h1 class="text-4xl font-bold">{{ t('views.settings.header') }}</h1>
-    <p class="text-gray-400 text-base">{{ t('views.settings.hint') }}</p>
-  </div>
+  <div class="flex flex-col max-w-xl mx-auto space-y-8 text-cbase">
+    <div class="text-center space-y-1 mb-3">
+      <i class="ri-settings-line text-8xl text-accent"></i>
+      <h1 class="text-4xl font-bold">
+        {{ t('views.settings.header') }}
+      </h1>
+      <p class="text-muted-foreground text-sm">
+        {{ t('views.settings.hint') }}
+      </p>
+    </div>
 
-  <div class="flex flex-col w-full max-w mx-auto p-2 mb-8 gap-6">
-
-    <div>
-      <div class="flex flex-col space-y-2 mb-2 ml-1">
-        <h2 class="text-sm font-semibold">{{ t('views.settings.general.name') }}</h2>
-      </div>
-      <ul class="list bg-base-100 rounded-box shadow-md w-full relative">
-        <li>
-          <span class="list-row items-center flex w-full">
-            <i class="ri-translate text-3xl"></i>
-            <div class="flex-1">{{ t('views.settings.general.language') }}</div>
-            <DropDownSelect
-              v-model="localeValue"
-              :items="supported"
-              :labelFn="(l) => t(`lang_select.${l}`)"
-            />
+    <List :title="t('views.settings.general.name')">
+      <div class="list-item justify-between">
+        <div class="flex items-center gap-3">
+          <i class="ri-translate text-2xl"></i>
+          <span class="text-sm font-medium">
+            {{ t('views.settings.general.language') }}
           </span>
-        </li>
-      </ul>
-    </div>
+        </div>
 
-    <div>
-      <div class="flex flex-col space-y-2 mb-2 ml-1">
-        <h2 class="text-sm font-semibold">{{ t('views.settings.additional.name') }}</h2>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="secondary" size="sm" class="gap-1 flex items-center text-accent border border-border">
+              {{ t(`lang_select.${localeValue}`) }}
+              <i class="ri-arrow-down-s-line text-lg"></i>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="end"
+            class="w-44 bg-card text-card-foreground border border-border rounded-md shadow-md"
+          >
+            <DropdownMenuItem
+              v-for="lang in supported"
+              :key="lang"
+              @click="localeValue = lang"
+              class="text-sm text-cbase hover:bg-card-light hover:text-card-foreground"
+            >
+              {{ t(`lang_select.${lang}`) }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <ul class="list bg-base-100 rounded-box shadow-md w-full relative hover:bg-base-200">
-        <li>
-            <a href="https://github.com/sht0rmx/TgMiniAppTemplate" target="_blank" rel="noopener noreferrer" class="list-row items-center flex w-full">
-            <i class="ri-github-fill text-3xl"/>
-            <div class="flex-1">{{ t('views.settings.additional.authors') }}</div>
-            <i class="ri-arrow-right-s-line"/>
-          </a>
-        </li>
-      </ul>
-    </div>
+    </List>
 
-    <div v-if="isLogged && !isTgEnv">
-      <div class="flex flex-col space-y-2 mb-2 ml-1">
-        <h2 class="text-sm font-bold">{{ t('views.settings.danger.name') }}</h2>
+    <List :title="t('views.settings.additional.name')">
+      <button
+        as="a"
+        href="https://github.com/sht0rmx/TgMiniAppTemplate"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="list-item"
+      >
+        <i class="ri-github-fill text-2xl mr-3"></i>
+        <span class="flex-1 text-sm font-medium">
+          {{ t('views.settings.additional.authors') }}
+        </span>
+        <i class="ri-arrow-right-s-line text-lg"></i>
+      </button>
+      <button
+        v-if="isLogged && isTgEnv"
+        class="list-item"
+        @click="router.push('/settings/devices')"
+      >
+        <i class="ri-device-line text-2xl mr-3"></i>
+        <span class="flex-1 text-sm font-medium">
+          {{ t('views.settings.additional.devices') }}
+        </span>
+        <i class="ri-arrow-right-s-line text-lg"></i>
+      </button>
+    </List>
+
+    <List v-if="isLogged && !isTgEnv" :title="t('views.settings.danger.name')">
+      <button class="list-item" @click="handleLogout">
+        <i class="ri-logout-box-line text-2xl mr-3"></i>
+        <span class="flex-1 text-sm font-medium">
+          {{ t('views.settings.danger.logout') }}
+        </span>
+        <i class="ri-arrow-right-s-line"></i>
+      </button>
+    </List>
+
+    <div class="text-center text-sm text-muted-foreground mt-8">
+      {{ t('views.settings.end_hint') }}
+      <div class="flex justify-center gap-4 mt-3">
+        <Badge :variant="badgeDbVariant" class="cursor-pointer text-xs" @click="fetchStatus">
+          {{ t(statusDb) }}
+        </Badge>
+
+        <Badge :variant="badgeAuthVariant" class="cursor-pointer text-xs" @click="checkAuth">
+          {{ t(statusAuth) }}
+          <span v-if="username" class="ml-1">{{ username }}</span>
+        </Badge>
       </div>
-      <ul class="list bg-error rounded-box shadow-md w-full relative hover:bg-warning">
-        <li>
-          <a @click="handleLogout" target="_blank" rel="noopener noreferrer" class="list-row items-center flex w-full">
-            <i class="ri-logout-box-line text-3xl text-gray-950"/>
-            <div class="flex-1 text-gray-950">{{ t('views.settings.danger.logout') }}</div>
-            <i class="ri-arrow-right-s-line text-gray-950"/>
-          </a>
-        </li>
-      </ul>
     </div>
-
-  </div>
-
-  <div class="text-center items-center text-sm text-gray-400 mt-5 space-y-2">
-    {{ t('views.settings.end_hint') }}
-  </div>
-
-  <div class="text-center items-center text-sm text-gray-400 mt-2 space-x-2 flex justify-center gap-2">
-
-    <div class="badge badge-sm cursor-pointer" :class="badgeDb" @click="fetchStatus()">
-      {{ t(statusDb) }}
-    </div>
-
-    <div class="badge badge-sm cursor-pointer" :class="badgeAuth" @click="checkAuth()">
-      {{ t(statusAuth) }} {{ username }}
-    </div>
-
   </div>
 </template>
