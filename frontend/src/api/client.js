@@ -62,7 +62,7 @@ class Client {
   }
 
   async login(initData) {
-    const res = await this.axios.post('/api/v1/auth/webapp', {
+    const res = await this.axios.post('/api/v1/auth/login/webapp', {
       initData,
       userAgent: navigator.userAgent,
     })
@@ -75,7 +75,7 @@ class Client {
 
   async refreshTokens() {
     try {
-      const res = await this.axios.post('/api/v1/auth/token/refresh')
+      const res = await this.axios.get('/api/v1/auth/token/refresh')
       if (res.status === 200) {
         this.setAccessToken(res.data.access_token)
         return { access: res.data.access_token, code: res.status }
@@ -90,7 +90,7 @@ class Client {
   }
 
   async logout() {
-    await this.axios.post('/api/v1/auth/token/revoke')
+    await this.axios.get('/api/v1/auth/token/revoke')
     this.setAccessToken(null)
   }
 

@@ -7,8 +7,6 @@ import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./swagger.json" with {type: "json"};
 
 import v1Router from "./v1/routes/index.js";
-import v1AuthRouter from "./v1/routes/auth/index.js";
-import v1TokenRouter from "./v1/routes/tokens.js";
 import {AppDataSource} from "./database/index.js";
 import {RefreshSession} from "./database/entities/RefreshSession.js";
 import {storageClient} from "./minio/client.js";
@@ -56,9 +54,6 @@ app.use(
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/v1", v1Router);
-app.use("/api/v1/auth", v1AuthRouter);
-app.use("/api/v1/auth/token", v1TokenRouter);
-
 
 AppDataSource.initialize()
     .then(() => {

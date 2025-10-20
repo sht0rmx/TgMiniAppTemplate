@@ -97,10 +97,10 @@ async function bootstrap() {
   const ok = await initAuth()
   const current = router.currentRoute.value.name
 
-  if (!ok && !isTgEnv && !['need_tg', 'unauthorized'].includes(current)) {
-    await router.push('/need_tg')
+  if (!ok && !isTgEnv && !['need_auth', 'unauthorized'].includes(current)) {
+    await router.push('/need_auth')
   }
-  if (!ok && isTgEnv && !['need_tg', 'unauthorized'].includes(current)) {
+  if (!ok && isTgEnv && !['need_auth', 'unauthorized'].includes(current)) {
     await router.push('/unauthorized')
   }
 

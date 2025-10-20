@@ -1,7 +1,20 @@
+import fs from "fs";
+import path from "path";
 import swaggerAutogen from "swagger-autogen";
 
 const outputFile = "./swagger.json";
-const endpointsFiles = ["./index.js"];
+
+function findJsFiles(dir) {
+  let res = [];
+  for (const f of fs.readdirSync(dir)) {
+    const full = path.join(dir, f);
+    if (fs.statSync(full).isDirectory()) res = res.concat(findJsFiles(full));
+    else if (full.endsWith(".js")) res.push(full);
+  }
+  return res;
+}
+
+const endpointsFiles = findJsFiles("./v1/routes");
 
 const doc = {
   info: {

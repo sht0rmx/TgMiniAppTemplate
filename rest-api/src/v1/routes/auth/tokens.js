@@ -1,13 +1,18 @@
-import {AuthService as AuthServ} from "../../services/AuthService.js";
-import {AppDataSource} from "../../database/index.js";
-import {RefreshSession} from "../../database/entities/RefreshSession.js";
+import {AppDataSource} from "../../../database/index.js";
+import {RefreshSession} from "../../../database/entities/RefreshSession.js";
+import { Session } from "../../../services/session/index.js";
 import {Router} from "express";
 import bcrypt from "bcrypt";
+import {authMiddleware} from "../../../middleware/auth.js";
 
 const router = Router();
-const authService = new AuthServ();
 
-router.post("/refresh", async (req, res) => {
+router.get("/refresh", async (req, res) => {
+    /*
+    #swagger.path = '/api/v1/auth/token/refresh'
+    #swagger.tags = []
+    #swagger.description = 'get access JWT token from session token & fingerprint'
+    */
     try {
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) {
@@ -20,7 +25,7 @@ router.post("/refresh", async (req, res) => {
         const ua = req.headers["user-agent"] || "web";
 
 
-        const {user, tokens} = await authService.refreshTokens(refreshToken, fpToken, ua);
+        const {user, tokens} = await Session.refreshTokens(refreshToken, fpToken, ua);
 
         res.cookie("refreshToken", tokens.refresh_token, {
             httpOnly: true,
@@ -46,7 +51,12 @@ router.post("/refresh", async (req, res) => {
     }
 });
 
-router.post("/revoke", async (req, res) => {
+router.get("/revoke", authMiddleware, async (req, res) => {
+    /*
+    #swagger.path = '/api/v1/auth/token/revoke'
+    #swagger.tags = ["Auth"]
+    #swagger.description = 'close session and mark session token "revoked"'
+    */
     try {
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) {

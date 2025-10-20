@@ -26,7 +26,7 @@ export default {
 </script>
 
 <template>
-  <div v-if="show" class="fixed bottom-4 z-50 px-4">
+  <div v-if="show" class="fixed bottom-4 z-50 px-4 text-cbase">
     <div role="alert" class="alert alert-info shadow-lg flex items-center gap-4 rounded-3xl">
       <i class="ri-refresh-line text-2xl"></i>
       <div class="flex-1">

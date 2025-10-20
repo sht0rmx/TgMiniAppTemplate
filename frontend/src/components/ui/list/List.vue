@@ -13,7 +13,7 @@ const props = defineProps({
     </h2>
 
     <Card class="rounded-2xl">
-      <div class="divide-y flex flex-col">
+      <div class="divide-y flex flex-col text-cbase">
         <slot />
       </div>
     </Card>

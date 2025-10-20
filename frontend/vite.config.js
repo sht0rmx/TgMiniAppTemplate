@@ -2,7 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-// import vueDevTools from 'vite-plugin-vue-devtools'
+import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -10,7 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     vue(),
-    // vueDevTools(),
+    vueDevTools(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -36,7 +36,7 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/jlj73h8b-5173\.euw\.devtunnels\.ms\/.*$/,
+            urlPattern: /^https:\/\/9d0vn28h-8080\.euw\.devtunnels\.ms\/.*$/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pages-cache',

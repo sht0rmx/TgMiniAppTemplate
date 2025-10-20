@@ -89,8 +89,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col max-w-xl mx-auto space-y-8">
-    <div class="text-left space-y-2">
+  <div class="flex flex-col max-w-xl mx-auto space-y-8 text-cbase">
+    <div class="text-center space-y-1 mb-3">
+      <i class="ri-settings-line text-8xl text-accent"></i>
       <h1 class="text-4xl font-bold">
         {{ t('views.settings.header') }}
       </h1>
@@ -124,7 +125,7 @@ onMounted(() => {
               v-for="lang in supported"
               :key="lang"
               @click="localeValue = lang"
-              class="text-sm hover:bg-card-light hover:text-card-foreground"
+              class="text-sm text-cbase hover:bg-card-light hover:text-card-foreground"
             >
               {{ t(`lang_select.${lang}`) }}
             </DropdownMenuItem>

@@ -1,44 +1,52 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { i18n } from '@/locales/index.js'
 
-import Home from '@/views/Home.vue'
-import NeedTgView from '@/views/Errors/NeedTg.vue'
-import Settings from '@/views/Settings.vue'
+import HomeView from '@/views/Home.vue'
+import LoginView from '@/views/Login.vue'
+import NeedAuthView from '@/views/Errors/NeedAuth.vue'
+import SettingsView from '@/views/Settings.vue'
 import NotFoundView from '@/views/Errors/NotFound.vue'
+import DevicesView from '@/views/Devices.vue'
+import UnauthorizedView from '@/views/Errors/Unauthorized.vue'
 
 import { isTgEnv, WebApp } from '@/main.js'
-import Devices from '@/views/Devices.vue'
-import NeedAuth from '@/views/Errors/NeedAuth.vue'
+
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
+    component: HomeView,
     meta: { titleKey: 'views.home.header' },
   },
   {
-    path: '/need_tg',
-    name: 'NeedTg',
-    component: NeedTgView,
+    path: '/need_auth',
+    name: 'NeedAuth',
+    component: NeedAuthView,
     meta: { titleKey: 'views.need_auth.header' },
   },
   {
     path: '/unauthorized',
     name: 'Unauthorized',
-    component: NeedAuth,
+    component: UnauthorizedView,
     meta: { titleKey: 'views.not_found.code.401.header' },
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: Settings,
+    component: SettingsView,
     meta: { titleKey: 'views.settings.header' },
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginView,
+    meta: { titleKey: 'views.login.header' },
   },
   {
     path: '/settings/devices',
     name: 'Devices',
-    component: Devices,
+    component: DevicesView,
     meta: { titleKey: 'views.devices.header' },
   },
   {
@@ -59,7 +67,7 @@ router.afterEach((to) => {
   if (key) {
     document.title = i18n.global.t(key)
   }
-  if (["/", "/need_tg"].includes(to.path)) {
+  if (["/", "/need_auth"].includes(to.path)) {
     WebApp.BackButton.hide()
   } else {
     WebApp.BackButton.show()
@@ -67,8 +75,8 @@ router.afterEach((to) => {
 })
 
 router.beforeEach((to, _, next) => {
-  if (!isTgEnv && ["/need_tg"].includes(to.path)) {
-    return next('/need_tg')
+  if (!isTgEnv && !["/need_auth", "/login"].includes(to.path)) {
+    return next('/need_auth')
   }
   next()
 })

@@ -5,18 +5,19 @@ import BottomDock from '@/components/BottomDock.vue'
 import { isLoading } from '@/main.js'
 import SplashScreen from '@/components/SplashScreen.vue'
 
+let hided_dock = ['NeedAuth', 'Login']
 </script>
 
 <template>
   <SplashScreen v-if="isLoading" />
-  <div v-else class="app-container" :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': $route.name !== 'NeedAuth' }]">
-    <main :class="['flex-1 text-sm text-base-content flex justify-center', { 'p-4': $route.name !== 'NeedAuth' },]">
-      <div :class="['w-full', $route.name === 'NeedAuth' ? 'max-w-sm' : 'max-w-2xl']">
+  <div v-else class="app-container" :class="['flex flex-col min-h-screen bg-base-200', { 'pb-14': !hided_dock.includes($route.name) }]">
+    <main :class="['flex-1 text-sm text-base-content flex justify-center', { 'p-4': !hided_dock.includes($route.name) },]">
+      <div :class="['w-full', hided_dock.includes($route.name) ? 'max-w-sm' : 'max-w-2xl']">
         <router-view />
       </div>
     </main>
     <UpdatePopup />
-    <BottomDock v-if="$route.name !== 'NeedAuth'" />
+    <BottomDock v-if="!hided_dock.includes($route.name)" />
   </div>
 </template>
 
