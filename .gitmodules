@@ -1,0 +1,9 @@
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/sht0rmx/TgMiniAppTemplate-frontend.git
+[submodule "backend"]
+	path = backend
+	url = https://github.com/sht0rmx/TgMiniAppTemplate-backend.git
+[submodule "bot"]
+	path = bot
+	url = https://github.com/sht0rmx/TgMiniAppTemplate-bot.git
