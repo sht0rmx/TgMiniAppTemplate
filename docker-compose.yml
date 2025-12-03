@@ -2,7 +2,6 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: dockerfile
     volumes:
       - frontend_data:/app/dist
     depends_on:
@@ -14,7 +13,6 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -22,12 +20,12 @@ services:
     depends_on:
       - db
       - minio
+      - redis
     restart: unless-stopped
 
   bot:
     build:
       context: ./bot
-      dockerfile: dockerfile
     depends_on:
       - backend
     volumes:
@@ -59,6 +57,16 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+
 
 volumes:
   frontend_data:
