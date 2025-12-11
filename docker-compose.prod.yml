@@ -1,0 +1,15 @@
+services:
+  backend:
+    restart: always
+    ports:
+      - "8000:8000"
+
+  bot:
+    restart: always
+
+  frontend:
+    build:
+      target: prod
+    restart: always
+    ports:
+      - "80:80"

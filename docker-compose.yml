@@ -1,37 +1,4 @@
 services:
-  frontend:
-    build:
-      context: ./frontend
-    volumes:
-      - frontend_data:/app/dist
-    depends_on:
-      - backend
-    ports:
-      - "5173:8080"
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./backend
-    ports:
-      - "8000:8000"
-    volumes:
-      - backend_data:/app/data
-    depends_on:
-      - db
-      - minio
-      - redis
-    restart: unless-stopped
-
-  bot:
-    build:
-      context: ./bot
-    depends_on:
-      - backend
-    volumes:
-      - bot_data:/app/data
-    restart: unless-stopped
-
   db:
     image: postgres:15
     environment:
@@ -43,6 +10,13 @@ services:
     volumes:
       - db_pg_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
 
   minio:
     image: minio/minio:latest
@@ -57,6 +31,8 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
+    networks:
+      - app_network
 
   redis:
     image: redis:7
@@ -66,12 +42,45 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
+    networks:
+      - app_network
 
+  backend:
+    build:
+      context: ./backend
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - app_network
+
+  bot:
+    build:
+      context: ./bot
+    env_file: .env
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ./frontend
+    env_file: .env
+    depends_on:
+      - backend
+    networks:
+      - app_network
 
 volumes:
-  frontend_data:
-  backend_data:
-  bot_data:
   db_pg_data:
   minio_data:
-    driver: local
+
+networks:
+  app_network:
+    driver: bridge
