@@ -167,5 +167,15 @@ for get translation and markup `modules.bot_funcs.get_data`
 
 ## Thanks
 
-created by @sht0rmx with help from @dima0409 in 2025y
+created by @sht0rmx with help from @dima0409 in 2026y
+
+dev: 
+```sh
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up frontend backend --watch --build
+```
+prod
+```sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up frontend backend --build
+```
+
 

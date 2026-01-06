@@ -48,7 +48,7 @@ services:
   backend:
     build:
       context: ./backend
-    env_file: .env
+    env_file: ./backend/.env
     depends_on:
       db:
         condition: service_healthy
@@ -62,7 +62,7 @@ services:
   bot:
     build:
       context: ./bot
-    env_file: .env
+    env_file: ./bot/.env
     depends_on:
       - backend
     networks:
@@ -71,7 +71,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    env_file: .env
+    env_file: ./frontend/.env
     depends_on:
       - backend
     networks:
