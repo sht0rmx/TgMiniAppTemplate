@@ -1,0 +1,51 @@
+# General
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.sqlite
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm/
+dist/
+.output/
+.nuxt/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+
+# Cursor / IDE
+.cursor/
+!.cursor/rules/
+
+# Project Specific
+backend/data/
+bot/data/
+bot/logs/
+frontend/dist/
+frontend/public/pwa/
