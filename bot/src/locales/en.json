@@ -1,0 +1,60 @@
+{
+    "lang-alias": "en",
+    "lang-name": "English",
+    "messages": {
+        "start": {
+            "msg": [
+                "Hello @{user}, I'm a bot from miniapp [template]('https://github.com/sht0rmx/tgminiapptemplate')\n",
+                "Main content of this project constains in webap! \n\n",
+                "For help type /help or click button below."
+            ],
+            "parse_mode": "Markdown",
+            "inline": {
+                "1": {
+                    "/help": "command:help"
+                },
+                "2": {
+                    "Run WebApp": "webapp:start"
+                }
+            }
+        },
+        "vote-ask": {
+            "msg": "Do you like this bot?",
+            "key": {
+                "1": [
+                    "Yes",
+                    "No"
+                ]
+            }
+        },
+        "app": {
+            "msg": "You can run bot's Miniapp by button below"
+        },
+    
+        "help": {
+            "msg": [
+                "Here is a list of commands that I can handle:\n\n",
+                "/start - show start message\n",
+                "/help - show all awalible commands\n",
+                "/app - open web app\n",
+                "[!] more possibilitys awailable in miniapp.\n",
+                "App can de oppened by inline button near message input, by command /app, from bot profile!\n",
+                "This is a preliminary list!"
+            ],
+            "inline": {
+                "1": {
+                    "Back to menu": "command:start"
+                }
+            }
+        },
+        "answers": {
+            "yes": "yes",
+            "no": "no"
+        },
+        "cancel": [
+            "/back",
+            "/close",
+            "/cancel"
+        ]
+    }
+}

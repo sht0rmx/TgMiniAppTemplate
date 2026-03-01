@@ -1,0 +1,223 @@
+{
+  "views": {
+    "home": {
+      "header": "Home",
+      "title": "Example TG MiniApp",
+      "description": "This is a simple repository that can be used as a starting point for your project.\nThe template is based on Vue.js and includes a UI library and an icon set. For convenience, the template uses an ORM client for PostgreSQL and MinIO as an S3-compatible data store, which can be further integrated with the database. FastApi is used to handle API endpoints, and AioGram (in Python) is used for interacting with the Telegram API.",
+      "hint": "To check the API status, you can open the menu tab via the button on the dock or click the button.",
+      "button": "Open Settings"
+    },
+    "menu": {
+      "header": "Menu",
+      "title": "Menu",
+      "settings_tooltip": "Settings",
+      "files": "Files",
+      "files_hint": "Upload, download and manage your files",
+      "bot": "Bot messaging",
+      "bot_hint": "Send messages to your Telegram bot"
+    },
+    "settings": {
+      "header": "Settings",
+      "title": "Settings",
+      "account": "Account",
+      "appearance": "Appearance",
+      "language": "Language",
+      "devices": "Devices",
+      "about": "About",
+      "logout": "Log out",
+      "version": "Snipla for Web v{version}",
+      "api_keys": "Api keys"
+    },
+    "account": {
+      "header": "Account",
+      "username": "Username",
+      "avatar": "Avatar",
+      "first_name": "First name",
+      "second_name": "Second name",
+      "oauth": "OAuth",
+      "qr": "Login by QR-code"
+    },
+    "devices": {
+      "header": "Devices",
+      "title": "Devices",
+      "hint": "Here you can view and manage the devices that have access to your account.",
+      "this_device": "Current device",
+      "active": "Active sessions",
+      "link": "Scan QR",
+      "current_badge": "current",
+      "session_killed": "Session terminated",
+      "kill_failed": "Failed to terminate session",
+      "dropdown": {
+        "ip": "IP address:",
+        "last_seen": "Last active:",
+        "created": "Created:",
+        "terminate": "Terminate session"
+      },
+      "no_devices": "No authorized devices found.",
+      "or_code": "or enter the code",
+      "code_placeholder": "Enter login code",
+      "accept_code": "Confirm login",
+      "accept_success": "Login confirmed successfully!",
+      "accept_failed": "Failed to confirm login",
+      "link_dialog": {
+        "title": "Link a device",
+        "hint": "Scan a QR code or enter a login code from another device"
+      },
+      "scan": {
+        "title": "Scan QR",
+        "close": "Close",
+        "error": "Failed to load camera"
+      }
+    },
+    "auth": {
+      "header": "Auth",
+      "title": "Login to Snipla",
+      "hint": "Scan this QR-code in authorized app or enter the code",
+      "code_hint": "or enter this code manually",
+      "try_again": "Try again",
+      "error": "Error occured: {error}",
+      "locked_title": "Auth",
+      "locked_description": "To get access for this resourse you need authorise",
+      "login_button": "Login",
+      "back_button": "Back",
+      "initdata": "Analysing InitData",
+      "miniapp_error": "Error while analysing initData",
+      "login_success": "Login sucessful!",
+      "login_rejected": "QR code was rejected!",
+      "refresh": "Refreshing tokens",
+      "qr_gen": "Generating qr-code",
+      "without_login": "Login was skipped. For unlock all features go to /login",
+      "skip_login": "Skip login"
+    },
+    "accept_login": {
+      "header": "Accept login",
+      "title": "Confirm login",
+      "hint": "Make sure you trust the device. Your account could be compromised if you confirm a login you did not initiate.",
+      "accept": "Confirm login",
+      "close": "Done",
+      "search": "Find session",
+      "code_placeholder": "Enter login code",
+      "qr_detected": "Login session detected from QR code",
+      "confirm_label": "Ready to confirm",
+      "not_found": "Login session not found or expired",
+      "invalid_qr": "Invalid QR code data",
+      "accept_failed": "Failed to confirm login. Try again.",
+      "accepted": "Login confirmed successfully!",
+      "success": "Login was successfully confirmed!",
+      "not_authorized": "You need to be logged in to confirm a login"
+    },
+    "api_keys": {
+      "header": "API Keys",
+      "title": "API Keys",
+      "hint": "Create and manage API keys for programmatic access to your account.",
+      "create": "Create API key",
+      "active_keys": "Your keys",
+      "empty": "No API keys yet.",
+      "banned_badge": "disabled",
+      "deleted": "API key deleted",
+      "create_failed": "Failed to create API key",
+      "action_failed": "Action failed",
+      "close": "Close",
+      "create_dialog": {
+        "title": "New API key",
+        "hint": "Give your key a descriptive name so you can identify it later.",
+        "placeholder": "Key name, e.g. My Bot"
+      },
+      "reveal": {
+        "title": "Key created!",
+        "hint": "Copy this key now. You won't be able to see it again.",
+        "copy": "Copy to clipboard",
+        "copied": "Copied!"
+      },
+      "detail": {
+        "created": "Created:",
+        "status": "Status:",
+        "active": "Active",
+        "disabled": "Disabled",
+        "disable": "Disable key",
+        "enable": "Enable key",
+        "delete": "Delete key"
+      }
+    },
+    "files": {
+      "header": "Files",
+      "title": "Files",
+      "hint": "Upload and manage your files. Max file size is 10 MB.",
+      "upload": "Upload file",
+      "your_files": "Your files",
+      "empty": "No files yet.",
+      "uploaded": "File uploaded successfully",
+      "upload_failed": "Failed to upload file",
+      "too_large": "File is too large. Max 10 MB",
+      "deleted": "File deleted",
+      "delete_failed": "Failed to delete file",
+      "download_failed": "Failed to download file",
+      "preview_failed": "Failed to load preview",
+      "preview_unsupported": "Preview is not available for this file type",
+      "detail": {
+        "uploaded": "Uploaded:",
+        "preview": "View",
+        "download": "Download",
+        "delete": "Delete"
+      }
+    },
+    "bot": {
+      "header": "Bot",
+      "title": "Bot",
+      "empty": "Send a message and it will appear in your Telegram chat with the bot",
+      "placeholder": "Type a message...",
+      "you": "You",
+      "bot_name": "Bot",
+      "sending": "Sending...",
+      "sent": "Sent",
+      "error": "Error",
+      "disclaimer": "Messages are sent to your Telegram chat via the bot"
+    },
+    "not_found": {
+      "header": "Page not found",
+      "content": "OPSSS... Page not found",
+      "hint": "The page you are trying to access does not exist.",
+      "back_button": "Back to home"
+    }
+  },
+  "components": {
+    "dock": {
+      "home": "Home",
+      "menu": "Menu"
+    },
+    "sidebar": {
+      "title": "Snipla",
+      "hint": "All-in-one template for fast dev.",
+      "expand_hint": "Expand the sidebar",
+      "auth": {
+        "title": "Log in to your account",
+        "hint": "To get all features of platform without restrictions",
+        "btn": "Log in"
+      }
+    },
+    "popup": {
+      "text": "Update the app",
+      "update": "Update",
+      "close": "Close"
+    }
+  },
+  "lang_select": {
+    "ru": "Russian",
+    "en": "English"
+  },
+  "badges": {
+    "load": "..."
+  },
+  "splash": {
+    "construction": "Now on server technical works! Wait some time.",
+    "api_unavalible": "Sorry, we cant connect to our servers"
+  },
+  "app": {
+    "ui": {
+      "system": "System",
+      "dark": "Dark",
+      "light": "Light"
+    },
+    "version": "v{version}"
+  }
+}

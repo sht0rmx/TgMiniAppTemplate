@@ -1,0 +1,72 @@
+services:
+  backend:
+    volumes:
+      - ./backend:/app
+    env_file: ./backend/.env.dev
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+        - action: sync
+          path: ./server
+          target: /app
+          ignore:
+            - .venv/
+            - __pycache__/
+            
+        - action: rebuild
+          path: ./server/pyproject.toml
+
+        - action: rebuild
+          path: ./server/uv.lock
+        
+
+  bot:
+    volumes:
+      - ./bot:/app
+    env_file: ./bot/.env.dev
+    command: >
+      uv run watchmedo auto-restart 
+      --pattern="*.py" 
+      --recursive -- 
+      python src/main.py
+    develop:
+      watch:
+        - action: sync
+          path: ./bot
+          target: /app
+          ignore:
+            - .venv/
+            - __pycache__/
+
+        - action: rebuild
+          path: ./bot/pyproject.toml
+
+        - action: rebuild
+          path: ./bot/uv.lock
+
+  frontend:
+    build:
+      target: dev
+    env_file: ./frontend/.env.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/ 
+            - dist/
+            
+        - action: rebuild
+          path: ./frontend/package.json
+          
+        - action: rebuild
+          path: ./frontend/package-lock.json
+

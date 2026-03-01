@@ -1,0 +1,92 @@
+[project]
+name = "backend-new"
+version = "0.1.0"
+description = "backend part or TgMiniAppTemplate"
+requires-python = ">=3.12"
+dependencies = [
+    # Core FastAPI
+    "fastapi[standard]>=0.114.2,<1.0.0",
+    # Pydantic
+    "pydantic>2.0",
+    "pydantic-settings<3.0.0,>=2.2.1",
+    # Templating
+    "jinja2<4.0.0,>=3.1.4",
+    # DB / Async
+    "sqlmodel<1.0.0,>=0.0.21",
+    "sqlalchemy>=2.0.0",
+    "asyncpg<1.0.0,>=0.27.0",
+    "alembic<2.0.0,>=1.12.1",
+    # HTTP / Requests
+    "httpx<1.0.0,>=0.25.1",
+    # Auth / JWT
+    "pyjwt<3.0.0,>=2.8.0",
+    # AWS S3 async
+    "boto3>=1.40.49",
+    "uvicorn>=0.38.0",
+    "aioboto3>=15.5.0",
+    "user-agents>=2.2.0",
+    "apscheduler>=3.11.1",
+    "redis>=7.1.0",
+]
+
+
+[dependency-groups]
+dev = [
+    "pytest<8.0.0,>=7.4.3",
+    "mypy<2.0.0,>=1.8.0",
+    "ruff<1.0.0,>=0.2.2",
+    "pre-commit<4.0.0,>=3.6.2",
+    "types-passlib<2.0.0.0,>=1.7.7.20240106",
+    "coverage<8.0.0,>=7.4.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+exclude = ["venv", ".venv", "alembic"]
+
+[tool.ruff]
+target-version = "py312"
+exclude = ["alembic", "venv", ".venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG001", # unused args
+    "T201",   # print statements
+]
+ignore = [
+    "E501",  # handled by black
+    "B008",  # function calls in arg defaults
+    "W191",  # tabs
+    "B904",  # raise Exception without from
+]
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+dynamic_context = "test_function"
+
+[tool.coverage.report]
+show_missing = true
+sort = "cover"
+
+[tool.coverage.html]
+show_contexts = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
