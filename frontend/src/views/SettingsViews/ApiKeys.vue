@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { ApiKeysService, type ApiKey } from '@/utils/api/apikeys.api.ts'
+import { onMounted, ref } from 'vue'
+import { type ApiKey, ApiKeysService } from '@/utils/api/apikeys.api.ts'
 import { showPush } from '@/components/alert'
 import Header from '@/components/Header.vue'
 import Menu from '@/components/menu/Menu.vue'
@@ -111,7 +111,10 @@ async function toggleBan() {
   if (result !== null) {
     selectedKey.value.banned = result
     const idx = keys.value.findIndex((k) => k.id === selectedKey.value?.id)
-    if (idx !== -1) keys.value[idx].banned = result
+
+    if (idx !== -1 && keys.value[idx]) {
+      keys.value[idx].banned = result
+    }
   } else {
     showPush('views.api_keys.action_failed', '', 'alert-warning', 'ri-error-warning-line')
   }
@@ -205,7 +208,9 @@ onMounted(() => loadKeys())
 
     <!-- Key detail drawer -->
     <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': drawerOpen }">
-      <div class="modal-box p-0 bg-base-100 rounded-t-3xl sm:rounded-3xl border-t sm:border-t-0 border-base-300">
+      <div
+        class="modal-box p-0 bg-base-100 rounded-t-3xl sm:rounded-3xl border-t sm:border-t-0 border-base-300"
+      >
         <div class="px-5 pt-5 pb-4 flex flex-col items-center text-center">
           <div class="flex items-center gap-3 w-full mb-3">
             <div
@@ -236,7 +241,11 @@ onMounted(() => loadKeys())
                 class="text-xs font-medium"
                 :class="selectedKey?.banned ? 'text-error' : 'text-success'"
               >
-                {{ selectedKey?.banned ? $t('views.api_keys.detail.disabled') : $t('views.api_keys.detail.active') }}
+                {{
+                  selectedKey?.banned
+                    ? $t('views.api_keys.detail.disabled')
+                    : $t('views.api_keys.detail.active')
+                }}
               </span>
             </div>
           </div>
@@ -248,7 +257,11 @@ onMounted(() => loadKeys())
               @click="toggleBan"
             >
               <i :class="selectedKey?.banned ? 'ri-lock-unlock-line' : 'ri-lock-line'"></i>
-              {{ selectedKey?.banned ? $t('views.api_keys.detail.enable') : $t('views.api_keys.detail.disable') }}
+              {{
+                selectedKey?.banned
+                  ? $t('views.api_keys.detail.enable')
+                  : $t('views.api_keys.detail.disable')
+              }}
             </button>
             <button class="btn btn-error rounded-xl" @click="deleteKey">
               <i class="ri-delete-bin-line"></i>
@@ -257,7 +270,11 @@ onMounted(() => loadKeys())
           </div>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeDrawer">
+      <form
+        method="dialog"
+        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
+        @click="closeDrawer"
+      >
         <button>close</button>
       </form>
     </div>
@@ -297,7 +314,11 @@ onMounted(() => loadKeys())
           </button>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeCreateDialog">
+      <form
+        method="dialog"
+        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
+        @click="closeCreateDialog"
+      >
         <button>close</button>
       </form>
     </div>
@@ -306,7 +327,9 @@ onMounted(() => loadKeys())
     <div class="modal" :class="{ 'modal-open': showRevealDialog }">
       <div class="modal-box max-w-sm">
         <div class="flex flex-col items-center text-center">
-          <div class="w-16 h-16 mb-4 rounded-2xl bg-success/10 flex items-center justify-center text-success">
+          <div
+            class="w-16 h-16 mb-4 rounded-2xl bg-success/10 flex items-center justify-center text-success"
+          >
             <i class="ri-check-double-line text-4xl"></i>
           </div>
 
@@ -330,7 +353,11 @@ onMounted(() => loadKeys())
           </button>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeRevealDialog">
+      <form
+        method="dialog"
+        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
+        @click="closeRevealDialog"
+      >
         <button>close</button>
       </form>
     </div>
