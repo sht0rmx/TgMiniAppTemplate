@@ -1,4 +1,4 @@
-import apiClientInst from './api.ts'
+import apiClientInst, { apiClient } from './api.ts'
 
 export interface FileItem {
   id: string
@@ -27,19 +27,18 @@ export class FilesService {
   }
 
   static async upload(file: File): Promise<boolean> {
-    try {
-      const form = new FormData()
-      form.append('file', file)
+  try {
+    const form = new FormData()
+    form.append('file', file)
 
-      const res = await apiClientInst.post(`${this.BASE}/upload`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000,
-      })
-      return res.status === 201
-    } catch {
-      return false
-    }
+    const res = await apiClientInst.post(`${this.BASE}/upload`, form, {
+      timeout: 60000,
+    })
+    return res.status === 201
+  } catch {
+    return false
   }
+}
 
   static async download(fileId: string, fileName: string): Promise<boolean> {
     try {
@@ -62,19 +61,36 @@ export class FilesService {
   }
 
   static async getBlob(fileId: string): Promise<Blob | null> {
-    try {
-      const res = await apiClientInst.get(`${this.BASE}/${fileId}`, {
-        responseType: 'blob',
-      })
-      return res.status === 200 ? res.data : null
-    } catch {
-      return null
+  try {
+    const res = await apiClientInst.get(`${this.BASE}/${fileId}`, {
+      responseType: 'blob',
+      timeout: 0,
+    })
+    
+    if (res.status === 200) {
+      return res.data
     }
+    return null
+  } catch (e) {
+    console.error('Download aborted/failed:', e)
+    return null
   }
+}
 
   static async remove(fileId: string): Promise<boolean> {
     try {
       const res = await apiClientInst.delete(`${this.BASE}/${fileId}`)
+      return res.status === 200
+    } catch {
+      return false
+    }
+  }
+
+  static async rename(fileId: string, newName: string): Promise<boolean> {
+    try {
+      const res = await apiClientInst.put(`${this.BASE}/${fileId}/rename`, {
+        name: newName,
+      })
       return res.status === 200
     } catch {
       return false

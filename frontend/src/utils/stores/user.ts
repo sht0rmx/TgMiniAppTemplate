@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia'
 
+export interface LinkedAccounts {
+  telegram?: boolean
+  yandex?: boolean
+}
+
 export interface UserData {
   id: string
   telegram_id: number
@@ -9,6 +14,7 @@ export interface UserData {
   avatar_url: string | null
   last_seen: string
   created_at: string
+  linked_accounts?: LinkedAccounts
 }
 
 export const useUserStore = defineStore('user', {

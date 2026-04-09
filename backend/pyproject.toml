@@ -27,6 +27,7 @@ dependencies = [
     "user-agents>=2.2.0",
     "apscheduler>=3.11.1",
     "redis>=7.1.0",
+    "requests>=2.32.5",
 ]
 
 

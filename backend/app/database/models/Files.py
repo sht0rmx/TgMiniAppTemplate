@@ -13,4 +13,5 @@ class File(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     uploaded_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     key = Column(String, unique=True, nullable=False)
+    display_name = Column(String, nullable=False)
     uploaded_at = Column(DateTime, default=func.now())

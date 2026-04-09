@@ -10,6 +10,10 @@ export interface WebAppLoginRequest {
   initData: string
 }
 
+export interface YandexLoginRequest {
+  code: string
+}
+
 export interface RecoveryResponse {
   code: string
   detail?: string
@@ -21,23 +25,45 @@ export interface RecoveryRequest {
 
 export interface AccessResponse {
   access_token: string
+  recovery_code?: string
   detail?: string
 }
 
 export class AuthService {
   private static AUTH_BASE = '/api/v1/auth'
-
-  /** POST /api/v1/auth/login/webapp - Webapp Login */
-  static async webappLogin(data: WebAppLoginRequest): Promise<boolean> {
+  static async webappLogin(data: WebAppLoginRequest): Promise<AccessResponse | null> {
     const res = await apiClientInst.post(`${this.AUTH_BASE}/login/webapp`, data)
     if (res.status === 200) {
       apiClient.setAccessToken(res.data.access_token)
-      return true
+      return res.data
     }
-    return false
+    return null
   }
 
-  /** GET /api/v1/auth/login/getqr - Get Qr Code */
+  static async yandexLogin(data: YandexLoginRequest): Promise<AccessResponse | null> {
+    try {
+      const res = await apiClientInst.post(`${this.AUTH_BASE}/login/yandex`, data)
+      if (res.status === 200) {
+        apiClient.setAccessToken(res.data.access_token)
+        return res.data
+      }
+      return null
+    } catch (error) {
+      console.error('Yandex login error:', error)
+      return null
+    }
+  }
+
+  static async transferAccount(data: RecoveryRequest): Promise<boolean> {
+    try {
+      const res = await apiClientInst.post(`${this.AUTH_BASE}/token/transfer`, data)
+      return res.status === 200
+    } catch (error) {
+      console.error('Transfer error:', error)
+      return false
+    }
+  }
+
   static async startQrLogin() {
     const res = await apiClientInst.get(`${this.AUTH_BASE}/login/getqr`)
 
@@ -111,7 +137,6 @@ export class AuthService {
     return { authPromise: connect(loginId), cancel }
   }
 
-  /** GET /api/v1/auth/login/search/{loginid} - Check Login Status */
   static async checkLogin(loginId: string): Promise<boolean> {
     const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/search/${loginId}`)
     if (resp.status !== 200) {
@@ -120,7 +145,6 @@ export class AuthService {
     return true
   }
 
-  /** GET /api/v1/auth/login/accept/{loginid} - Validate Login (Accept Login) */
   static async validateLogin(loginId: string): Promise<boolean> {
     const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/accept/${loginId}`)
     if (resp.status !== 200) {
@@ -129,7 +153,6 @@ export class AuthService {
     return true
   }
 
-  /** GET /api/v1/auth/login/code/search/{code} - Search by short code */
   static async searchByCode(code: string): Promise<boolean> {
     try {
       const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/code/search/${code}`)
@@ -139,7 +162,6 @@ export class AuthService {
     }
   }
 
-  /** GET /api/v1/auth/login/code/accept/{code} - Accept login by short code */
   static async acceptByCode(code: string): Promise<boolean> {
     try {
       const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/code/accept/${code}`)
@@ -149,7 +171,6 @@ export class AuthService {
     }
   }
 
-  /** GET /api/v1/auth/check - Check Authentication Status */
   static async check(): Promise<boolean> {
     const store = useUserStore()
     const res = await apiClientInst.get(`${this.AUTH_BASE}/check`)
@@ -165,7 +186,6 @@ export class AuthService {
     return true
   }
 
-  /** GET /api/v1/auth/token/recreate-tokens - Get Refresh Token + Access token */
   static async recreateTokens(): Promise<boolean> {
     try {
       const resp = await apiClientInst.get(`${this.AUTH_BASE}/token/recreate-tokens`)
@@ -180,7 +200,6 @@ export class AuthService {
     }
   }
 
-  /** GET /api/v1/auth/token/revoke - Revoke Refresh Session */
   static async revokeRefreshSession(): Promise<boolean> {
     const resp = await apiClientInst.get(`${this.AUTH_BASE}/token/revoke`)
     if (resp.status !== 200) {
@@ -189,7 +208,6 @@ export class AuthService {
     return true
   }
 
-  /** GET /api/v1/auth/token/recovery - Generate Recovery Code */
   static async generateRecovery(): Promise<RecoveryResponse | boolean> {
     const resp = await apiClientInst.get(`${this.AUTH_BASE}/token/recovery`)
     if (resp.status == 200) {
@@ -199,7 +217,6 @@ export class AuthService {
     return false
   }
 
-  /** POST /api/v1/auth/token/transfer - Transfer User (using Recovery Code) */
   static async transferUser(data: RecoveryRequest): Promise<boolean> {
     const resp = await apiClientInst.post(`${this.AUTH_BASE}/token/transfer`, data)
     if (resp.status !== 200) {

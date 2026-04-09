@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineProps<{
-  text: string
-  icon: string
+  text?: string | undefined,
+  icon?: string | undefined,
 }>()
 </script>
 
@@ -12,7 +12,7 @@ defineProps<{
         <slot name="content">
           <div class="flex items-center gap-2">
             <i class="text-xl" :class="icon"></i>
-            <span>{{ $t(text) }}</span>
+            <span>{{ $t(text || "Clear") }}</span>
           </div>
         </slot>
 

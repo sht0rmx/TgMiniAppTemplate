@@ -2,7 +2,7 @@ import { isTgEnv } from '@/main.ts'
 import router from '@/utils/router.ts'
 import type { WebApp as WebAppType } from 'telegram-web-app'
 
-export const WebApp: WebAppType = window.Telegram.WebApp
+export const WebApp: WebAppType = window.Telegram?.WebApp;
 
 export function checkTg() {
   if (window?.Telegram?.WebApp) {

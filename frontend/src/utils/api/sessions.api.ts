@@ -30,7 +30,6 @@ export interface AllSessionsResponse {
 export class SessionsService {
   private static SESSIONS_BASE = '/api/v1/session'
 
-  /** GET /api/v1/session/current - Current Session Details */
   static async getCurrentSession(): Promise<CurrentSessionResponse | null> {
     try {
       const res = await apiClientInst.get(`${this.SESSIONS_BASE}/current`)
@@ -43,7 +42,6 @@ export class SessionsService {
     }
   }
 
-  /** GET /api/v1/session/all - All Active Sessions */
   static async getAllSessions(): Promise<AllSessionsResponse> {
     try {
       const res = await apiClientInst.get(`${this.SESSIONS_BASE}/all`)
@@ -56,7 +54,6 @@ export class SessionsService {
     }
   }
 
-  /** GET /api/v1/session/kill/{sid} - Kill a specific Session */
   static async killSession(sid: string): Promise<boolean> {
     try {
       const res = await apiClientInst.get(`${this.SESSIONS_BASE}/kill/${sid}`)

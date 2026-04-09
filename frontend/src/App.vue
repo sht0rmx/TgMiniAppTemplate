@@ -2,8 +2,19 @@
 import { computed, watch } from 'vue'
 import BottomDock from '@/components/BottomDock.vue'
 import AuthModal from '@/components/AuthModal.vue'
+import RecoveryCodeModal from '@/components/RecoveryCodeModal.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import SplashScreen from '@/components/SplashScreen.vue'
-import { hiddenNav, isLoading, isTgEnv, lockPage, technicalWork, unableAccessApi } from '@/main.ts'
+import {
+  hiddenNav,
+  isLoading,
+  isTgEnv,
+  lockPage,
+  technicalWork,
+  unableAccessApi,
+  recoveryCode,
+  showRecoveryModal,
+} from '@/main.ts'
 import Drawer from '@/components/drawer/Drawer.vue'
 import { showPush } from '@/components/alert/index.ts'
 import Alert from '@/components/alert/Alert.vue'
@@ -16,13 +27,12 @@ const route = useRoute()
 const containerClasses = computed(() => [
   'flex flex-col min-h-screen bg-base-300 overflow-hidden',
   { 'blur-sm': lockPage.value },
-  { 'pb-20': !hiddenNav.value },
+  { 'pb-15': !hiddenNav.value },
 ])
 
 const mainClasses = computed(() => [
   'flex-1 flex overflow-y-auto',
   isTgEnv.value ? 'px-4' : 'px-4 md:px-6 pt-4',
-
 ])
 
 watch(unableAccessApi, () => {
@@ -34,7 +44,7 @@ watch(unableAccessApi, () => {
 if (technicalWork) {
   showPush('splash.construction', '', 'alert-info', 'ri-server-line', false)
 }
-const appName = import.meta.env.VITE_APP_TITLE as string || 'App'
+const appName = (import.meta.env.VITE_APP_TITLE as string) || 'App'
 
 watch(
   () => route.meta.titleKey,
@@ -45,7 +55,7 @@ watch(
       document.title = appName
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
@@ -63,7 +73,12 @@ watch(
       <BottomDock v-if="!hiddenNav && !isLoading" />
     </div>
 
-    <AuthModal />
+    <AuthModal v-if="!isLoading" />
+    <RecoveryCodeModal
+      :code="recoveryCode"
+      :is-open="showRecoveryModal"
+      @close="showRecoveryModal = false"
+    />
     <Alert />
   </Drawer>
 </template>

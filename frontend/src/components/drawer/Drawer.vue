@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import DrawerMenu from '@/components/drawer/DrawerMenu.vue'
 import { hiddenNav, isLoading } from '@/main'
+import { ref } from 'vue'
+
+// Open drawer by default
+const drawerOpen = ref(true)
 </script>
 
 <template>
   <div class="drawer" :class="{ 'md:drawer-open': !hiddenNav }">
-    <input id="sidebar" type="checkbox" class="drawer-toggle" />
+    <input id="sidebar" v-model="drawerOpen" type="checkbox" class="drawer-toggle" />
 
     <div class="drawer-content">
       <slot />

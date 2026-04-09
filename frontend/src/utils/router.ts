@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { type RouteRecordRaw } from 'vue-router'
 
+import { WebApp } from '@/utils/telegram'
 import HomeView from '@/views/Home.vue'
 import LoginView from '@/views/Login.vue'
 
@@ -12,8 +13,9 @@ import Devices from '@/views/SettingsViews/Devices.vue'
 import ApiKeys from '@/views/SettingsViews/ApiKeys.vue'
 import FilesView from '@/views/MenuViews/Files.vue'
 import BotChatView from '@/views/MenuViews/BotChat.vue'
-import { WebApp } from '@/utils/telegram.ts'
-
+import YandexCallback from '@/views/YandexCallback.vue'
+import Recovery from '@/views/Recovery.vue'
+import ComponentsDemo from '@/views/ComponentsDemo.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -26,6 +28,18 @@ const routes: RouteRecordRaw[] = [
     name: 'Login',
     component: LoginView,
     meta: { titleKey: 'views.auth.header', auth: false, noNav: true },
+  },
+  {
+    path: '/login/ya/callback',
+    name: 'YandexCallback',
+    component: YandexCallback,
+    meta: { titleKey: 'views.auth.yandex_callback', auth: false, noNav: true },
+  },
+  {
+    path: '/recovery',
+    name: 'Recovery',
+    component: Recovery,
+    meta: { titleKey: 'views.recovery.title', auth: true },
   },
   {
     path: '/menu',
@@ -64,6 +78,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: 'views.bot.header', auth: true },
   },
   {
+    path: '/components',
+    name: 'ComponentsDemo',
+    component: ComponentsDemo,
+    meta: { titleKey: 'views.menu.components', auth: false },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: ErrorPage,
@@ -99,7 +119,7 @@ router.beforeEach((to, _, next) => {
   }
 
   if (to.meta.auth && !authStatus.value) {
-    return next({ path: '/login', query: { redirect: to.fullPath } })
+    return next()
   }
 
   return next()

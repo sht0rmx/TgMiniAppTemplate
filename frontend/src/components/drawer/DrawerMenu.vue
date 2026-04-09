@@ -1,5 +1,10 @@
 <script setup>
 import { authStatus, nav_items } from '@/main'
+import { useUserStore } from '@/utils/stores/user'
+import { computed } from 'vue'
+
+const userStore = useUserStore()
+const userData = computed(() => userStore.data)
 </script>
 
 <template>
@@ -46,14 +51,33 @@ import { authStatus, nav_items } from '@/main'
         </li>
       </ul>
     </div>
-    <div v-if:="authStatus"></div>
+    <div v-if="authStatus" class="flex flex-row p-2 items-center gap-3 is-drawer-close:flex-col">
+      <div v-if="userData?.avatar_url" class="avatar placeholder flex-shrink-0">
+        <div class="w-12 rounded-full">
+          <img :src="userData.avatar_url" :alt="userData.name" />
+        </div>
+      </div>
+      <div v-else class="avatar placeholder flex-shrink-0">
+        <div class="w-12 rounded-full bg-accent text-accent-content">
+          <span class="text-xl">{{ userData?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
+        </div>
+      </div>
+      <div class="is-drawer-close:hidden is-drawer-close:mt-2 is-drawer-close:text-center min-w-0">
+        <p class="font-semibold truncate">{{ userData?.name || 'User' }}</p>
+        <p class="text-xs opacity-70 truncate">@{{ userData?.username || 'user' }}</p>
+      </div>
+    </div>
     <div
       v-else
       class="flex flex-col p-2 rounded-box is-drawer-close:rounded-full items-center bg-base-200/70 is-drawer-close:bg-base-100"
     >
-      <i class="ri-account-circle-2-line text-5xl text-accent leading-none" />
-      <div class="text-center is-drawer-close:hidden">
-        <p>{{ $t('components.sidebar.auth.title') }}</p>
+      <div class="avatar placeholder">
+        <div class="w-12 rounded-full bg-base-300 text-base-content is-drawer-close:w-10">
+          <i class="ri-account-circle-2-line text-2xl"></i>
+        </div>
+      </div>
+      <div class="text-center is-drawer-close:hidden mt-2">
+        <p class="font-semibold">{{ $t('components.sidebar.auth.title') }}</p>
         <p class="text-xs opacity-70">{{ $t('components.sidebar.auth.hint') }}</p>
       </div>
       <button

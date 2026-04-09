@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.database.database import AlreadyCreated, Expired, NotFound, Revoked, db_client
 from app.middleware.auth import deny_bot, require_auth, require_origin
+from app.middleware.spam import rate_limit
 from app.services.auth.AuthService import AuthUtils
 from app.services.telegram import telegram_service
 from app.schemas.models import RecoveryRequest
@@ -63,6 +64,7 @@ async def get_refresh_token(request: Request, user_agent: str = Header(default="
 
 
 # get jwt and update session token
+@rate_limit(limit=10, period=60)  # 10 token refreshes per 60s
 @router.get("/get-tokens", dependencies=[Depends(require_origin)])
 async def get_access_token(request: Request, refresh_token: str | None = Cookie(default=None),):
     if not hasattr(request.state, "fingerprint"):
@@ -114,7 +116,7 @@ async def get_access_token(request: Request, refresh_token: str | None = Cookie(
 
 
 # revoke refresh session
-@router.get("/revoke", dependencies=[Depends(require_origin), Depends(deny_bot)])
+@router.get("/revoke", dependencies=[Depends(require_origin), Depends(deny_bot())])
 async def revoke_resresh_session(request: Request):
     if not hasattr(request.state, "fingerprint"):
         return JSONResponse({"detail": "Missing fingerprint"}, status_code=400)
@@ -129,6 +131,7 @@ async def revoke_resresh_session(request: Request):
 
 
 # generate recovery code
+@rate_limit(limit=3, period=300)  # 3 recovery attempts per 5min
 @router.get("/recovery", dependencies=[Depends(require_origin), Depends(require_auth)])
 async def generate_recovery(request: Request):
     if not hasattr(request.state, "user_id"):
@@ -166,17 +169,28 @@ async def generate_recovery(request: Request):
 
 
 # transfer user
-@router.post("/transfer", dependencies=[Depends(require_origin), Depends(deny_bot)])
+@rate_limit(limit=3, period=300)
+@router.post("/transfer", dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)])
 async def transfer_user(request_data: RecoveryRequest, request: Request):
     if not hasattr(request.state, "user_id"):
         return JSONResponse({"detail": "Missing user_id"}, status_code=400)
 
     user_id = request.state.user_id
+    try:
+        user = await db_client.get_user(uid=user_id)
+        if not user.telegram_id and not user.yandex_id:
+            return JSONResponse(
+                {"detail": "Account transfer requires authentication via Telegram or Yandex"},
+                status_code=403,
+            )
+    except NotFound:
+        return JSONResponse({"detail": "User not found"}, status_code=404)
 
     try:
         await db_client.recovery_user(code=request_data.recovery_code, user_id=user_id)
         return JSONResponse(content={"detail": "Transfer successfull"}, status_code=200)
-    except NotFound:
+    except NotFound as e:
+        logger.error(f"Recovery failed: code={request_data.recovery_code}, current_user={user_id}, error={e}")
         return JSONResponse(
             content={"detail": "Recovery failed, user or recovery code not found"},
             status_code=400,

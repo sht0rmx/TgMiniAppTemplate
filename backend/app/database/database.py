@@ -332,7 +332,7 @@ class Database:
         )
 
         async with self.async_session() as dbsession:
-            await dbsession.execute(insert(File).values(uploaded_by=user_id, key=key))
+            await dbsession.execute(insert(File).values(uploaded_by=user_id, key=key, display_name=filename))
             await dbsession.commit()
             return True
 
@@ -410,13 +410,19 @@ class Database:
             try:
                 user = await self.get_user(uid=user_id)
 
-                await dbsession.execute(delete(User).where(User.id == user.id))
                 await dbsession.execute(
                     delete(RefreshSession).where(RefreshSession.user_id == user.id)
                 )
                 await dbsession.execute(
                     delete(RecoveryCode).where(RecoveryCode.user_id == user.id)
                 )
+                await dbsession.execute(
+                    delete(ApiKey).where(ApiKey.user_id == user.id)
+                )
+                await dbsession.execute(
+                    delete(File).where(File.uploaded_by == user.id)
+                )
+                await dbsession.execute(delete(User).where(User.id == user.id))
 
                 await dbsession.commit()
                 return True
@@ -469,16 +475,48 @@ class Database:
             await db.commit()
             return True
 
-    async def recovery_user(self, code: str, user_id: str | uuid.UUID) -> bool:
-        try:
-            hash = create_hash("RECOVERY_SECRET", code)
-            recovery_code = await self.get_recovery_code(hash=str(hash))
-            await self.delete_user(user_id=str(recovery_code.user_id))
-            await self.update_user_id(old_id=user_id, new_id=recovery_code.user_id)
+    async def rename_file(self, file_id: str | uuid.UUID, new_name: str) -> bool:
+        async with self.async_session() as db:
+            result = await db.execute(select(File).where(File.id == file_id))
+            file_record = result.scalars().first()
 
+            if not file_record:
+                raise NotFound("File not found!")
+
+            await db.execute(update(File).where(File.id == file_id).values(display_name=new_name))
+            await db.commit()
             return True
-        except NotFound:
-            raise NotFound("Recovery failed, user or recovery code not found")
+
+    async def recovery_user(self, code: str, user_id: str | uuid.UUID) -> bool:
+        async with self.async_session() as dbsession:
+            try:
+                hash = create_hash("RECOVERY_SECRET", code)
+                recovery_code = await self.get_recovery_code(hash=str(hash))
+                
+                old_user = await self.get_user(uid=str(recovery_code.user_id))
+                current_user = await self.get_user(uid=str(user_id))
+                
+                # Delete old user and related data FIRST (before updating current user)
+                # This avoids unique constraint violations on username, telegram_id, etc.
+                await dbsession.execute(delete(RefreshSession).where(RefreshSession.user_id == old_user.id))
+                await dbsession.execute(delete(RecoveryCode).where(RecoveryCode.user_id == old_user.id))
+                await dbsession.execute(delete(User).where(User.id == old_user.id))
+                
+                # Now update current user with old user's profile data
+                # No unique constraint violations since old_user is already deleted
+                await dbsession.execute(
+                    update(User).where(User.id == current_user.id).values(
+                        username=old_user.username,
+                        name=old_user.name,
+                        role=old_user.role,
+                        avatar_url=old_user.avatar_url
+                    )
+                )
+                
+                await dbsession.commit()
+                return True
+            except NotFound:
+                raise NotFound("Recovery failed, user or recovery code not found")
 
     async def accept_login(self, user_id: str, login: str = "", code: str = "", role: str = "user") -> bool:
         async with self.async_session() as dbsession:

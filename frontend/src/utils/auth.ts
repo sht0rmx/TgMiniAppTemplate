@@ -34,7 +34,8 @@ export async function authInit(): Promise<boolean> {
       },
     })
   } else {
-    showPush('views.auth.without_login', '', 'alert-warning', 'ri-error-warning-line')
+    if (router.currentRoute.value.path !== '/login')
+    {showPush('views.auth.without_login', '', 'alert-warning', 'ri-error-warning-line')}
   }
 
   return false

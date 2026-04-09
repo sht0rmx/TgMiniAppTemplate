@@ -14,28 +14,46 @@
       "files": "Files",
       "files_hint": "Upload, download and manage your files",
       "bot": "Bot messaging",
-      "bot_hint": "Send messages to your Telegram bot"
+      "bot_hint": "Send messages to your Telegram bot",
+      "components": "Components",
+      "components_hint": "UI components and usage examples"
     },
     "settings": {
       "header": "Settings",
       "title": "Settings",
-      "account": "Account",
+      "main": "Main",
       "appearance": "Appearance",
+      "account": "Account",
       "language": "Language",
       "devices": "Devices",
       "about": "About",
-      "logout": "Log out",
-      "version": "Snipla for Web v{version}",
-      "api_keys": "Api keys"
+      "delete_confirm_title": "Delete Account",
+      "delete_confirm_message": "Are you sure you want to delete your account? This action cannot be undone.",
+      "unlink_confirm_title": "Unlink Account",
+      "unlink_confirm_message": "Are you sure you want to unlink your account?"
     },
     "account": {
       "header": "Account",
+      "title": "Account Info",
       "username": "Username",
       "avatar": "Avatar",
       "first_name": "First name",
       "second_name": "Second name",
       "oauth": "OAuth",
-      "qr": "Login by QR-code"
+      "qr": "Login by QR-code",
+      "linked_accounts": "Linked Accounts",
+      "link_hint": "Link other accounts for easier login",
+      "created": "Created",
+      "role": "Role",
+      "danger_zone": "Danger Zone",
+      "delete_warning": "Deleting your account is permanent and cannot be undone.",
+      "yandex_callback": "Yandex OAuth Callback",
+      "yandex_link": "Yandex Account Linking",
+      "processing": "Processing authentication...",
+      "auto_redirect": "Your account will automatically redirect shortly",
+      "redirecting_shortly": "Redirecting shortly...",
+      "redirecting": "Redirecting to your account...",
+      "redirecting_login": "Redirecting to login..."
     },
     "devices": {
       "header": "Devices",
@@ -87,7 +105,20 @@
       "refresh": "Refreshing tokens",
       "qr_gen": "Generating qr-code",
       "without_login": "Login was skipped. For unlock all features go to /login",
-      "skip_login": "Skip login"
+      "skip_login": "Skip login",
+      "ya": {
+        "processing": "Processing authentication",
+        "auto_redirect": "Your account will automatically redirect shortly",
+        "redirecting_shortly": "Redirecting shortly...",
+        "error": "Error occured",
+        "redirecting_login": "Redirecting to login page...",
+        "link_success": "Account linked successfully",
+        "login_success": "Login successful",
+        "redirecting": "Redirecting to your account..."
+      },
+      "recovery_code_title": "Recovery Code",
+      "recovery_code_description": "Save this recovery code securely. You can use it to transfer your account to another device or account.",
+      "recovery_code_warning": "Keep this code safe and do not share it with anyone."
     },
     "accept_login": {
       "header": "Accept login",
@@ -159,7 +190,11 @@
         "preview": "View",
         "download": "Download",
         "delete": "Delete"
-      }
+      },
+      "renamed": "File renamed",
+      "rename_failed": "Failed to rename file",
+      "cancel": "Cancel",
+      "save": "Save"
     },
     "bot": {
       "header": "Bot",
@@ -172,6 +207,17 @@
       "sent": "Sent",
       "error": "Error",
       "disclaimer": "Messages are sent to your Telegram chat via the bot"
+    },
+    "recovery": {
+      "title": "Account Recovery",
+      "description": "Enter your recovery code to transfer this account to your current session.",
+      "code_label": "Recovery Code",
+      "code_required": "Recovery code is required",
+      "auth_required": "You must be logged in to recover an account",
+      "submit": "Recover Account",
+      "success": "Account recovered successfully",
+      "failed": "Recovery failed",
+      "error": "An error occurred during recovery"
     },
     "not_found": {
       "header": "Page not found",
@@ -208,6 +254,11 @@
   "badges": {
     "load": "..."
   },
+  "common": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close"
+  },
   "splash": {
     "construction": "Now on server technical works! Wait some time.",
     "api_unavalible": "Sorry, we cant connect to our servers"
@@ -219,5 +270,10 @@
       "light": "Light"
     },
     "version": "v{version}"
+  },
+  "actions": {
+    "link": "Link",
+    "unlink": "Unlink",
+    "delete_account": "Delete Account"
   }
 }

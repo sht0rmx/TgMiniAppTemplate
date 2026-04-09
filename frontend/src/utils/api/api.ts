@@ -26,7 +26,6 @@ class Client {
     this.axios = axios.create({
       baseURL: API_URL,
       withCredentials: true,
-      headers: { 'Content-Type': 'application/json' },
       timeout: 5000,
     })
 
@@ -41,6 +40,12 @@ class Client {
 
         const isTokensEndpoint = original?.url?.includes('/api/v1/auth/token/get-tokens')
         const isLoginEndpoint = original?.url?.includes('/api/v1/auth/login/webapp')
+
+        // Не пытаемся обновить токен для невалидных запросов (400)
+        if (err.response?.status === 400) {
+          console.warn('Bad request:', err.response.data)
+          return Promise.reject(err)
+        }
 
         if (
           err.response?.status === 401 &&

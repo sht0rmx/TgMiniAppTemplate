@@ -17,14 +17,21 @@ if (import.meta.env.DEV) {
 export let isTgEnv: Ref<boolean> = ref(false)
 export let isLoading: Ref<boolean> = ref(true)
 
+export let hiddenNav: Ref<boolean> = ref(false)
+export let backButton: Ref<boolean> = ref(false)
+
 export let authStatus: Ref<boolean> = ref(false)
 export let authRequired: Ref<boolean> = ref(false)
 export let lockPage = computed(
   () => authRequired.value && !authStatus.value && router.currentRoute.value.fullPath !== '/login',
 )
+export let recoveryCode: Ref<string> = ref('')
+export let showRecoveryModal: Ref<boolean> = ref(false)
 
-export let hiddenNav: Ref<boolean> = ref(false)
-export let backButton: Ref<boolean> = ref(false)
+export const showRecoveryCodeModal = (code: string) => {
+  recoveryCode.value = code
+  showRecoveryModal.value = true
+}
 
 export let technicalWork: boolean = import.meta.env.VITE_CONSTRUCTION_MODE as boolean
 export let unableAccessApi: Ref<boolean> = ref(false)

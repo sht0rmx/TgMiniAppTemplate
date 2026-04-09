@@ -1,6 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 
+from aiohttp.test_utils import TestClient
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from dotenv import load_dotenv
@@ -74,6 +75,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Range", "Accept-Ranges"]
 )
 
 app.add_middleware(SecurityHeadersMiddleware)

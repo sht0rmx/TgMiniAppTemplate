@@ -3,7 +3,7 @@ import { apiClient } from '@/utils/api/api'
 import { AuthService } from '@/utils/api/auth.api'
 import { showPush } from '@/components/alert'
 import QrCode from '@/components/QrCode.vue'
-import { isLoading, isTgEnv } from '@/main'
+import { isLoading, isTgEnv, showRecoveryCodeModal } from '@/main'
 import { onMounted, ref, type Ref, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { WebApp } from '@/utils/telegram.ts'
@@ -42,7 +42,7 @@ function stopQR() {
 async function LoginTg() {
   enableSpinner.value = true
   spinnerStatus.value = 'views.auth.initdata'
-  let res = false
+  let res: any = null
 
   if (WebApp && isTgEnv.value) {
     res = await AuthService.webappLogin({ initData: WebApp.initData })
@@ -50,9 +50,19 @@ async function LoginTg() {
   }
 
   if (res) {
+    if (res.recovery_code) {
+      // Show recovery code modal
+      showRecoveryCodeModal(res.recovery_code)
+    }
     return true
   }
   return false
+}
+
+const loginYandex = () => {
+  const clientId = import.meta.env.VITE_YACID as string
+  const url = `https://oauth.yandex.ru/authorize?response_type=code` + `&client_id=${clientId}`
+  window.location.href = url
 }
 
 async function startQR(): Promise<any> {
@@ -100,7 +110,7 @@ async function successPush() {
   isLoading.value = false
   let state = AuthService.check()
   if (!state) {
-    showPush('views.auth.login_error', '', 'alert-danger', 'ri-close-line')
+    showPush('views.auth.login_error', '', 'alert-warning', 'ri-close-line')
     return null
   }
   showPush('views.auth.login_success', '', 'alert-success', 'ri-check-line')
@@ -193,6 +203,9 @@ onBeforeUnmount(() => stopQR())
 
           <button class="btn btn-sm btn-square" @click="openLink('https://t.me/sniplabot')">
             <i class="ri-telegram-2-line text-xl" />
+          </button>
+          <button class="btn btn-sm btn-square btn-error btn-soft" @click="loginYandex">
+            <span class="font-bold">Y</span>
           </button>
         </div>
       </div>

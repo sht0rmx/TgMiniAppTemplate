@@ -3,7 +3,7 @@ import { lockPage } from '@/main.ts'
 </script>
 
 <template>
-  <div class="modal" :class="{ 'modal-open': lockPage }" role="dialog">
+  <div class="modal bg-base-100" :class="{ 'modal-open': lockPage }" role="dialog">
     <div class="modal-box w-3/4 max-w-sm">
       <h3 class="text-lg font-bold">{{ $t('views.auth.locked_title') }}</h3>
       <p class="py-4">{{ $t('views.auth.locked_description') }}</p>

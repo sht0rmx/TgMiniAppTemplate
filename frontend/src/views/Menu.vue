@@ -15,6 +15,14 @@ const menuItems = [
     title: 'views.menu.bot',
     hint: 'views.menu.bot_hint',
   },
+  {
+    path: '/components',
+    icon: 'ri-palette-line',
+    colorClass: 'bg-warning/10 text-warning',
+    title: 'views.menu.components',
+    hint: 'views.menu.components_hint',
+    isComponent: true,
+  },
 ]
 </script>
 
@@ -33,8 +41,9 @@ const menuItems = [
     <div class="grid grid-cols-2 gap-4 max-w-xl mx-auto">
       <button
         v-for="item in menuItems"
-        :key="item.path"
+        :key="item.title"
         class="card bg-base-100 h-36 md:h-28 flex flex-col items-center justify-center gap-2.5 p-3 cursor-pointer hover:bg-base-200 active:scale-[0.97] transition-all duration-150 border border-base-300 rounded-2xl"
+        :class="{ 'col-span-2': item.isComponent }"
         @click="$router.push(item.path)"
       >
         <div

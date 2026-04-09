@@ -21,7 +21,11 @@ async def check(request: Request):
             "role": user.role,
             "avatar_url": user.avatar_url,
             "last_seen": user.last_seen.isoformat(),
-            "created_at": user.created_at.isoformat()
+            "created_at": user.created_at.isoformat(),
+            "linked_accounts": {
+                "telegram": getattr(user, 'linked_telegram', False),
+                "yandex": getattr(user, 'linked_yandex', False),
+            }
         }
         return JSONResponse(content={"user": user_entity}, status_code=200)
     except NotFound:
