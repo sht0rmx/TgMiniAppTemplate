@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { apiClient } from '@/utils/api/api'
 import { AuthService } from '@/utils/api/auth.api'
+import { AccountService } from '@/utils/api/account.api'
 import { showPush } from '@/components/alert'
 import QrCode from '@/components/QrCode.vue'
-import { isLoading, isTgEnv, showRecoveryCodeModal } from '@/main'
+import { isTgEnv, showRecoveryCodeModal } from '@/main'
 import { onMounted, ref, type Ref, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { WebApp } from '@/utils/telegram.ts'
+import { buildYandexOAuthUrl } from '@/utils/oauth/yandex'
+import { finalizeAuthAndRedirect, syncSessionThenNavigate } from '@/utils/auth'
+import yandexIcon from '@/assets/ya.svg'
 
 const route = useRoute()
 const router = useRouter()
+
+const botUsername = import.meta.env.VITE_TG_USERNAME as string
+const defaultAppUrl = import.meta.env.VITE_TG_MINIAPP_START as string
+const app_url = defaultAppUrl || `https://t.me/${botUsername}?startapp=${btoa('login')}`
 
 const qrUrl: Ref<string> = ref('')
 const loginCode: Ref<string> = ref('')
@@ -24,6 +32,16 @@ let redirect_to: string = '/'
 
 let timer: number | null = null
 const QR_LIFETIME = 5 * 60 * 1000
+
+function yandexRedirectUri(): string {
+  return import.meta.env.VITE_YANDEX_REDIRECT_URI || `${window.location.origin}/login`
+}
+
+function queryStringParam(q: unknown): string {
+  if (typeof q === 'string') return q
+  if (Array.isArray(q) && typeof q[0] === 'string') return q[0]
+  return ''
+}
 
 const openLink = (url: string): void => {
   window.open(url, '_blank', 'noopener,noreferrer')
@@ -51,7 +69,6 @@ async function LoginTg() {
 
   if (res) {
     if (res.recovery_code) {
-      // Show recovery code modal
       showRecoveryCodeModal(res.recovery_code)
     }
     return true
@@ -60,9 +77,49 @@ async function LoginTg() {
 }
 
 const loginYandex = () => {
-  const clientId = import.meta.env.VITE_YACID as string
-  const url = `https://oauth.yandex.ru/authorize?response_type=code` + `&client_id=${clientId}`
-  window.location.href = url
+  window.location.href = buildYandexOAuthUrl({
+    clientId: import.meta.env.VITE_YACID as string,
+    state: 'login',
+    redirectUri: yandexRedirectUri(),
+  })
+}
+
+async function handleYandexOAuth(code: string, state: string) {
+  enableSpinner.value = true
+  spinnerStatus.value = 'views.auth.ya.processing'
+  stopQR()
+
+  try {
+    if (state === 'link_account') {
+      const result = await AccountService.linkYandex(code)
+      if (!result) throw new Error('link failed')
+      showPush('views.auth.ya.link_success', '', 'alert-success', 'ri-check-line')
+      await finalizeAuthAndRedirect(router, '/menu/settings')
+      return
+    }
+
+    const result = await AuthService.yandexLogin({ code })
+    if (!result) throw new Error('login failed')
+    if (result.recovery_code) {
+      showRecoveryCodeModal(result.recovery_code)
+    }
+    showPush('views.auth.ya.login_success', '', 'alert-success', 'ri-check-line')
+    await new Promise((r) => setTimeout(r, 1500))
+    await syncSessionThenNavigate(router, redirect_to)
+  } catch (e) {
+    console.error('Yandex OAuth error:', e)
+    showPush('views.auth.ya.error', '', 'alert-warning', 'ri-close-line')
+    if (state === 'link_account') {
+      await router.replace('/menu/settings')
+    } else {
+      await router.replace({
+        path: '/login',
+        query: redirect_to !== '/' ? { redirect: redirect_to } : {},
+      })
+    }
+  } finally {
+    enableSpinner.value = false
+  }
 }
 
 async function startQR(): Promise<any> {
@@ -86,7 +143,7 @@ async function startQR(): Promise<any> {
   }, QR_LIFETIME)
 
   authPromise
-    ?.then(async (token) => {
+    ?.then(async () => {
       stopQR()
 
       try {
@@ -94,10 +151,7 @@ async function startQR(): Promise<any> {
       } catch (e) {
         console.warn('Failed to establish refresh session:', e)
       }
-      await AuthService.check()
-
-      showPush('views.auth.login_success', '', 'alert-success', 'ri-check-line')
-      router.push(redirect_to)
+      await completeSuccessfulLogin()
     })
     .catch((err) => {
       console.warn('Auth rejected:', err)
@@ -106,22 +160,25 @@ async function startQR(): Promise<any> {
     })
 }
 
-async function successPush() {
-  isLoading.value = false
-  let state = AuthService.check()
-  if (!state) {
+async function completeSuccessfulLogin() {
+  const ok = await AuthService.check()
+  if (!ok) {
     showPush('views.auth.login_error', '', 'alert-warning', 'ri-close-line')
-    return null
+    return
   }
   showPush('views.auth.login_success', '', 'alert-success', 'ri-check-line')
-  router.push(redirect_to)
-  return null
+  await router.push(redirect_to)
+}
+
+async function successPush() {
+  await completeSuccessfulLogin()
 }
 
 async function startLogin() {
   try {
-    redirect_to = String(route.query.redirect)
-  } catch (e) {
+    const r = route.query.redirect
+    redirect_to = typeof r === 'string' && r ? r : '/'
+  } catch {
     redirect_to = '/'
   }
 
@@ -129,8 +186,13 @@ async function startLogin() {
     redirect_to = '/'
   }
 
+  const oauthCode = queryStringParam(route.query.code)
+  if (oauthCode) {
+    await handleYandexOAuth(oauthCode, queryStringParam(route.query.state))
+    return
+  }
+
   let res = false
-  isLoading.value = true
 
   try {
     res = await apiClient.refreshTokens()
@@ -148,9 +210,6 @@ async function startLogin() {
     }
   } else {
     await startQR()
-    window.setTimeout(() => {
-      isLoading.value = false
-    }, 200)
   }
 }
 
@@ -201,11 +260,11 @@ onBeforeUnmount(() => stopQR())
             <i class="ri-github-line text-xl" />
           </button>
 
-          <button class="btn btn-sm btn-square" @click="openLink('https://t.me/sniplabot')">
+          <button class="btn btn-sm btn-square" @click="openLink(app_url)">
             <i class="ri-telegram-2-line text-xl" />
           </button>
           <button class="btn btn-sm btn-square btn-error btn-soft" @click="loginYandex">
-            <span class="font-bold">Y</span>
+            <yandexIcon class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -217,3 +276,4 @@ onBeforeUnmount(() => stopQR())
     </footer>
   </div>
 </template>
+

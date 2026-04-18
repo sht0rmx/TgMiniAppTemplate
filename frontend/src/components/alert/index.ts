@@ -7,7 +7,7 @@ export interface AlertItem {
   type: string
   icon: string
   msg: string
-  subKey: string
+  subKey: string | Record<string, string>
 }
 
 export const alerts = ref<AlertItem[]>([])
@@ -15,7 +15,7 @@ let counter = 0
 
 export function showPush(
   msg: string,
-  subKey: string = '',
+  subKey: string | Record<string, string> = '',
   type: string = 'alert-info',
   icon: string = 'ri-box-3-line',
   autoclose: boolean = true,

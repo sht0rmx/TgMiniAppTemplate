@@ -1,6 +1,7 @@
+import hashlib
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from dotenv import load_dotenv
 from sqlalchemy import and_, delete, insert, or_, select, update
@@ -8,7 +9,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
 from sqlalchemy.sql.expression import Select
 
-from app.api.routes.auth.sse.manager import sse_manager
 from app.database.models import Base
 from app.database.models.ApiKeys import ApiKey
 from app.database.models.Files import File
@@ -16,7 +16,6 @@ from app.database.models.OneTimeCodes import OneTimeCode
 from app.database.models.RecoveryCodes import RecoveryCode
 from app.database.models.RefreshSessions import RefreshSession
 from app.database.models.Users import User
-from app.services.auth.AuthService import AuthUtils
 from app.storage.storage import StorageClient
 from app.utils import create_hash, is_date_expired, parse_expire
 
@@ -124,7 +123,11 @@ class Database:
             return sessions
 
     async def get_user(
-        self, uid: str | uuid.UUID = "", telegram_id: int = 0, username: str = ""
+        self,
+        uid: str | uuid.UUID = "",
+        telegram_id: int = 0,
+        username: str = "",
+        yandex_id: str = "",
     ) -> User:
         async with self.async_session() as dbsession:
             query = select(User)
@@ -135,6 +138,8 @@ class Database:
                 query = query.where(User.telegram_id == telegram_id)
             elif username:
                 query = query.where(User.username == username)
+            elif yandex_id:
+                query = query.where(User.yandex_id == yandex_id)
 
             result = await dbsession.execute(query)
             user = result.scalars().first()
@@ -170,6 +175,22 @@ class Database:
                 raise Expired("Login session expired!")
 
             return login_session
+
+    async def set_one_time_code_accepted(
+        self, login_session_id: str | uuid.UUID
+    ) -> OneTimeCode:
+        async with self.async_session() as dbsession:
+            res = await dbsession.execute(
+                update(OneTimeCode)
+                .values(accepted=True)
+                .where(OneTimeCode.id == login_session_id)
+                .returning(OneTimeCode)
+            )
+            await dbsession.commit()
+            row = res.scalar_one_or_none()
+            if not row:
+                raise NotFound("Login session not found")
+            return row
 
     async def get_recovery_code(
         self, hash: str = "", user_id: str | uuid.UUID = ""
@@ -264,8 +285,14 @@ class Database:
             await dbsession.commit()
             return session
 
-    async def update_user(self, telegram_id: int, username: str, name: str, avatar_url: str, role="user") -> tuple[User, bool]:
-        """Create or update a user. Returns (user, is_new) tuple."""
+    async def update_user(
+        self,
+        telegram_id: int,
+        username: str | None,
+        name: str | None,
+        avatar_url: str | None,
+        role="user",
+    ) -> tuple[User, bool]:
         async with self.async_session() as dbsession:
             res = await dbsession.execute(
                 select(User).where(User.telegram_id == telegram_id)
@@ -316,6 +343,54 @@ class Database:
 
             await dbsession.commit()
             return True
+
+    async def link_user_telegram(
+        self, user_id: str | uuid.UUID, telegram_id: int
+    ) -> None:
+        async with self.async_session() as dbsession:
+            res = await dbsession.execute(
+                update(User)
+                .where(User.id == user_id)
+                .values(telegram_id=telegram_id, linked_telegram=True)
+            )
+            if res.rowcount == 0:
+                raise NotFound("User not found")
+            await dbsession.commit()
+
+    async def link_user_yandex(
+        self, user_id: str | uuid.UUID, yandex_id: str
+    ) -> None:
+        async with self.async_session() as dbsession:
+            res = await dbsession.execute(
+                update(User)
+                .where(User.id == user_id)
+                .values(yandex_id=str(yandex_id), linked_yandex=True)
+            )
+            if res.rowcount == 0:
+                raise NotFound("User not found")
+            await dbsession.commit()
+
+    async def unlink_telegram(self, user_id: str | uuid.UUID) -> None:
+        async with self.async_session() as dbsession:
+            res = await dbsession.execute(
+                update(User)
+                .where(User.id == user_id)
+                .values(linked_telegram=False)
+            )
+            if res.rowcount == 0:
+                raise NotFound("User not found")
+            await dbsession.commit()
+
+    async def unlink_yandex(self, user_id: str | uuid.UUID) -> None:
+        async with self.async_session() as dbsession:
+            res = await dbsession.execute(
+                update(User)
+                .where(User.id == user_id)
+                .values(linked_yandex=False, yandex_id=None)
+            )
+            if res.rowcount == 0:
+                raise NotFound("User not found")
+            await dbsession.commit()
 
     async def update_api_key(self, key_id: str, banned=False):
         async with self.async_session() as dbsession:
@@ -487,6 +562,75 @@ class Database:
             await db.commit()
             return True
 
+    async def find_or_create_yandex_user(
+        self,
+        yandex_id: str,
+        username: str,
+        name: str,
+        avatar_url: str | None,
+        email: str = "",
+    ) -> tuple[User, bool]:
+        user = None
+        is_new = False
+
+        try:
+            user = await self.get_user(yandex_id=str(yandex_id))
+        except NotFound:
+            user = None
+
+        if user is None and username:
+            try:
+                existing_by_username = await self.get_user(username=username)
+                if not existing_by_username.yandex_id:
+                    user = existing_by_username
+                elif existing_by_username.yandex_id == str(yandex_id):
+                    user = existing_by_username
+            except NotFound:
+                pass
+
+        if user is None:
+            candidate_username = username or None
+            if candidate_username:
+                try:
+                    await self.get_user(username=candidate_username)
+                    suffix = 1
+                    base_username = candidate_username
+                    while True:
+                        candidate_username = f"{base_username}_{suffix}"
+                        try:
+                            await self.get_user(username=candidate_username)
+                            suffix += 1
+                        except NotFound:
+                            break
+                except NotFound:
+                    pass
+
+            fake_telegram_id = -(
+                int(
+                    hashlib.sha256(
+                        str(yandex_id or username or email).encode()
+                    ).hexdigest(),
+                    16,
+                )
+                % (10**17)
+            ) - 1
+
+            user, is_new = await self.update_user(
+                telegram_id=fake_telegram_id,
+                username=candidate_username,
+                name=name,
+                avatar_url=avatar_url,
+            )
+        else:
+            user, _ = await self.update_user(
+                telegram_id=user.telegram_id,
+                username=username or user.username,
+                name=name,
+                avatar_url=avatar_url,
+            )
+
+        return user, is_new
+
     async def recovery_user(self, code: str, user_id: str | uuid.UUID) -> bool:
         async with self.async_session() as dbsession:
             try:
@@ -495,15 +639,11 @@ class Database:
                 
                 old_user = await self.get_user(uid=str(recovery_code.user_id))
                 current_user = await self.get_user(uid=str(user_id))
-                
-                # Delete old user and related data FIRST (before updating current user)
-                # This avoids unique constraint violations on username, telegram_id, etc.
+
                 await dbsession.execute(delete(RefreshSession).where(RefreshSession.user_id == old_user.id))
                 await dbsession.execute(delete(RecoveryCode).where(RecoveryCode.user_id == old_user.id))
                 await dbsession.execute(delete(User).where(User.id == old_user.id))
-                
-                # Now update current user with old user's profile data
-                # No unique constraint violations since old_user is already deleted
+
                 await dbsession.execute(
                     update(User).where(User.id == current_user.id).values(
                         username=old_user.username,
@@ -517,48 +657,6 @@ class Database:
                 return True
             except NotFound:
                 raise NotFound("Recovery failed, user or recovery code not found")
-
-    async def accept_login(self, user_id: str, login: str = "", code: str = "", role: str = "user") -> bool:
-        async with self.async_session() as dbsession:
-            try:
-                if login:
-                    login_hash = create_hash("LOGIN_SECRET", login)
-                    login_session = await self.get_login_session(login_hash=login_hash)
-                elif code:
-                    login_session = await self.get_login_session(code=code)
-
-                res = await dbsession.execute(
-                    update(OneTimeCode)
-                    .values(accepted=True)
-                    .where(OneTimeCode.id == login_session.id)
-                    .returning(OneTimeCode)
-                )
-                await dbsession.commit()
-                login_session = res.scalar_one()
-                if not login_session:
-                    raise NotFound("Login session not found")
-                token = str(uuid.uuid4())
-                session = await db_client.create_refresh_session(
-                    refresh_token=token,
-                    fingerprint=str(login_session.fingerprint),
-                    ip=str(login_session.ip),
-                    user_id=user_id,
-                )
-                access_token = AuthUtils.gen_jwt_token(
-                    user_id=user_id, session_id=session.id, role=role
-                )
-                print(f"Login session: {login_session}")
-                print(f"SSE login id: {login_session.sse_login_id}")
-                await sse_manager.push_event(
-                    login_id=str(login_session.sse_login_id),
-                    data={"type": "auth_success", "access_token": access_token},
-                )
-                return True
-            except NotFound:
-                raise NotFound("can`t accept session!")
-
-            except Expired:
-                raise Expired("Login expired, please create new login code")
 
     async def revoke_refresh_session(self, fingerprint: str, revoked: bool = True):
         async with self.async_session() as dbsession:
@@ -598,14 +696,12 @@ class Database:
         key_hash = create_hash("API_SECRET", raw_key)
 
         async with self.async_session() as dbsession:
-            # Check if this key already exists
             result = await dbsession.execute(
                 select(ApiKey).where(ApiKey.api_key_hash == key_hash)
             )
             if result.scalar_one_or_none():
-                return  # already seeded
+                return
 
-            # Ensure a system bot user exists (telegram_id=0)
             result = await dbsession.execute(
                 select(User).where(User.telegram_id == 0)
             )

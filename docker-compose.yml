@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:15
+    container_name: postgres-snipla
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,7 +12,7 @@ services:
       - db_pg_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,7 +21,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: minio
+    container_name: minio-snipla
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -31,17 +32,27 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - app_network
 
   redis:
     image: redis:7
     container_name: redis
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - app_network
 
@@ -53,9 +64,15 @@ services:
       db:
         condition: service_healthy
       minio:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v1/ping" ]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
     networks:
       - app_network
 
@@ -64,7 +81,8 @@ services:
       context: ./bot
     env_file: ./bot/.env
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -73,13 +91,15 @@ services:
       context: ./frontend
     env_file: ./frontend/.env
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app_network
 
 volumes:
   db_pg_data:
   minio_data:
+
 
 networks:
   app_network:

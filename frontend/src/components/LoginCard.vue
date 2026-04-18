@@ -7,24 +7,25 @@ const userStore = useUserStore()
 
 <template>
   <div class="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
-    <!-- Logged-in state -->
     <div v-if="authStatus && userStore.data" class="card-body p-4">
       <div class="flex items-center gap-4">
         <div class="avatar placeholder">
-          <div
-            class="w-14 h-14 rounded-full bg-linear-to-br from-primary to-secondary text-primary-content flex items-center justify-center"
-          >
+          
             <img
               v-if="userStore.data.avatar_url"
               :src="userStore.data.avatar_url"
               :alt="userStore.data.name"
-              class="rounded-full object-cover"
+              class="rounded-full object-cover w-14 h-14 "
               @error="userStore.data.avatar_url = null"
             />
-            <span v-else class="text-xl font-bold uppercase">
+            
+            <div v-else
+              class="w-14 h-14 rounded-full bg-linear-to-br from-primary to-secondary text-primary-content flex items-center justify-center"
+            >
+            <span class="text-xl font-bold uppercase">
               {{ userStore.data.name?.charAt(0) || 'U' }}
             </span>
-          </div>
+            </div>
         </div>
 
         <div class="flex flex-col min-w-0">

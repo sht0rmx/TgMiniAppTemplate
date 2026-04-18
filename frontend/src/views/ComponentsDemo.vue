@@ -38,7 +38,7 @@ import Header from '@/components/Header.vue'
   menu: {
     name: 'Menu Card',
     code: `<script setup lang="ts">
-import MenuCard from '@/components/menu/MenuCard.vue'
+import MenuCard from '@/components/menu/Card.vue'
 import Menu from '@/components/menu/Menu.vue'
 <\/script>
 
@@ -213,8 +213,8 @@ function copyCode(): void {
   if (navigator.clipboard) {
     navigator.clipboard
       .writeText(code)
-      .then(() => showPush('Code copied to clipboard', '', 'alert-success', 'ri-check-line'))
-      .catch(() => showPush('Failed to copy', '', 'alert-error', 'ri-close-line'))
+      .then(() => showPush('views.components_demo.copy_ok', '', 'alert-success', 'ri-check-line'))
+      .catch(() => showPush('views.components_demo.copy_fail', '', 'alert-error', 'ri-close-line'))
   }
 }
 </script>
@@ -227,7 +227,7 @@ function copyCode(): void {
       <!-- UI Preview -->
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <h2 class="card-title text-lg">Preview</h2>
+          <h2 class="card-title text-lg">{{ $t('views.components_demo.preview') }}</h2>
           <div class="divider my-2"></div>
 
           <!-- Component Selector -->
@@ -248,9 +248,9 @@ function copyCode(): void {
             <!-- Header Preview -->
             <template v-if="selectedComponent === 'header'">
               <div class="w-full">
-                <Header title="Page Title" :settings_show="true" />
+                <Header :title="$t('views.components_demo.page_title')" :settings_show="true" />
                 <div class="p-4 text-sm text-base-content">
-                  <p>Header with settings button and back navigation</p>
+                  <p>{{ $t('views.components_demo.header_caption') }}</p>
                 </div>
               </div>
             </template>
@@ -258,11 +258,11 @@ function copyCode(): void {
             <!-- Menu Preview -->
             <template v-if="selectedComponent === 'menu'">
               <div class="w-full">
-                <Menu header="Example Section">
+                <Menu header="views.components_demo.menu_section">
                   <Card>
                     <template #content>
                       <div class="flex w-full justify-between">
-                        <span>Menu Item 1</span>
+                        <span>{{ $t('views.components_demo.menu_item_1') }}</span>
                         <i class="ri-arrow-right-line" />
                       </div>
                     </template>
@@ -270,7 +270,7 @@ function copyCode(): void {
                   <Card>
                     <template #content>
                       <div class="flex w-full justify-between">
-                        <span>Menu Item 2</span>
+                        <span>{{ $t('views.components_demo.menu_item_2') }}</span>
                         <i class="ri-arrow-right-line" />
                       </div>
                     </template>
@@ -284,27 +284,27 @@ function copyCode(): void {
               <div class="w-full space-y-3">
                 <button
                   class="btn btn-success btn-sm"
-                  @click="showPush('Success message', '', 'alert-success', 'ri-check-line')"
+                  @click="showPush('views.components_demo.sample_success', '', 'alert-success', 'ri-check-line')"
                 >
-                  Show Success
+                  {{ $t('views.components_demo.show_success') }}
                 </button>
                 <button
                   class="btn btn-error btn-sm"
-                  @click="showPush('Error message', '', 'alert-error', 'ri-close-line')"
+                  @click="showPush('views.components_demo.sample_error', '', 'alert-error', 'ri-close-line')"
                 >
-                  Show Error
+                  {{ $t('views.components_demo.show_error') }}
                 </button>
                 <button
                   class="btn btn-warning btn-sm"
-                  @click="showPush('Warning message', '', 'alert-warning', 'ri-alert-line')"
+                  @click="showPush('views.components_demo.sample_warning', '', 'alert-warning', 'ri-alert-line')"
                 >
-                  Show Warning
+                  {{ $t('views.components_demo.show_warning') }}
                 </button>
                 <button
                   class="btn btn-info btn-sm"
-                  @click="showPush('Info message', '', 'alert-info', 'ri-information-line')"
+                  @click="showPush('views.components_demo.sample_info', '', 'alert-info', 'ri-information-line')"
                 >
-                  Show Info
+                  {{ $t('views.components_demo.show_info') }}
                 </button>
               </div>
             </template>
@@ -315,7 +315,7 @@ function copyCode(): void {
       <!-- Code -->
       <div class="card bg-base-100 border border-base-300">
         <div class="card-body">
-          <h2 class="card-title text-lg">Code</h2>
+          <h2 class="card-title text-lg">{{ $t('views.components_demo.code') }}</h2>
           <div class="divider my-2"></div>
 
           <!-- Code Display -->

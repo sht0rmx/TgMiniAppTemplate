@@ -6,7 +6,7 @@ from fastapi import APIRouter, Cookie, Depends, Header, Request
 from fastapi.responses import JSONResponse
 
 from app.database.database import AlreadyCreated, Expired, NotFound, Revoked, db_client
-from app.middleware.auth import deny_bot, require_auth, require_origin
+from app.middleware.auth import deny_bot
 from app.middleware.spam import rate_limit
 from app.services.auth.AuthService import AuthUtils
 from app.services.telegram import telegram_service
@@ -18,10 +18,12 @@ logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/token", tags=["tokens"])
 
-
-# recreate session token
 @router.get(
-    "/recreate-tokens", dependencies=[Depends(require_origin), Depends(deny_bot), Depends(require_auth)]
+    "/recreate-tokens",
+    dependencies=[
+        Depends(deny_bot),
+    ],
+    summary="Новая пара токенов (текущая сессия)",
 )
 async def get_refresh_token(request: Request, user_agent: str = Header(default="")):
     if not hasattr(request.state, "fingerprint") or not hasattr(request.state, "user_id"):
@@ -63,10 +65,15 @@ async def get_refresh_token(request: Request, user_agent: str = Header(default="
     return resp
 
 
-# get jwt and update session token
-@rate_limit(limit=10, period=60)  # 10 token refreshes per 60s
-@router.get("/get-tokens", dependencies=[Depends(require_origin)])
-async def get_access_token(request: Request, refresh_token: str | None = Cookie(default=None),):
+@rate_limit(limit=10, period=60)
+@router.get(
+    "/get-tokens",
+    dependencies=[],
+    summary="Обновить access token по refresh cookie",
+)
+async def get_access_token(
+    request: Request, refresh_token: str | None = Cookie(default=None)
+):
     if not hasattr(request.state, "fingerprint"):
         return JSONResponse({"detail": "Missing fingerprint"}, status_code=400)
 
@@ -115,8 +122,11 @@ async def get_access_token(request: Request, refresh_token: str | None = Cookie(
         )
 
 
-# revoke refresh session
-@router.get("/revoke", dependencies=[Depends(require_origin), Depends(deny_bot())])
+@router.get(
+    "/revoke",
+    dependencies=[Depends(deny_bot)],
+    summary="Отозвать refresh-сессию",
+)
 async def revoke_resresh_session(request: Request):
     if not hasattr(request.state, "fingerprint"):
         return JSONResponse({"detail": "Missing fingerprint"}, status_code=400)
@@ -130,9 +140,12 @@ async def revoke_resresh_session(request: Request):
     )
 
 
-# generate recovery code
-@rate_limit(limit=3, period=300)  # 3 recovery attempts per 5min
-@router.get("/recovery", dependencies=[Depends(require_origin), Depends(require_auth)])
+@rate_limit(limit=3, period=300)
+@router.get(
+    "/recovery",
+    dependencies=[],
+    summary="Сгенерировать код восстановления",
+)
 async def generate_recovery(request: Request):
     if not hasattr(request.state, "user_id"):
         return JSONResponse({"detail": "Missing user_id"}, status_code=400)
@@ -143,7 +156,6 @@ async def generate_recovery(request: Request):
         code = gen_code(length=16)
         await db_client.create_recovery_code(user_id=user_id, code=code)
 
-        # Send recovery code to user's Telegram chat
         sent = False
         try:
             user = await db_client.get_user(uid=user_id)
@@ -168,9 +180,14 @@ async def generate_recovery(request: Request):
         )
 
 
-# transfer user
 @rate_limit(limit=3, period=300)
-@router.post("/transfer", dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)])
+@router.post(
+    "/transfer",
+    dependencies=[
+        Depends(deny_bot),
+    ],
+    summary="Перенос аккаунта по коду восстановления",
+)
 async def transfer_user(request_data: RecoveryRequest, request: Request):
     if not hasattr(request.state, "user_id"):
         return JSONResponse({"detail": "Missing user_id"}, status_code=400)

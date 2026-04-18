@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import DrawerMenu from '@/components/drawer/DrawerMenu.vue'
 import { hiddenNav, isLoading } from '@/main'
-import { ref } from 'vue'
-
-// Open drawer by default
-const drawerOpen = ref(true)
+import { drawerOpen } from '@/main'
 </script>
 
 <template>

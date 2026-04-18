@@ -4,6 +4,17 @@ import type { WebApp as WebAppType } from 'telegram-web-app'
 
 export const WebApp: WebAppType = window.Telegram?.WebApp;
 
+export function getTelegramStartAppAction(): string | null {
+  const param = WebApp?.initDataUnsafe?.start_param
+  if (!param) return null
+
+  try {
+    return atob(param)
+  } catch {
+    return param
+  }
+}
+
 export function checkTg() {
   if (window?.Telegram?.WebApp) {
     const data = WebApp.initDataUnsafe

@@ -39,7 +39,7 @@ const handleSend = async () => {
     >
       <span v-if="isSending" class="loading loading-spinner"></span>
       <i v-else class="ri-send-plane-2-line text-xl"></i>
-      {{ $t('views.bot.send_now') || 'Отправить' }}
+      {{ $t('views.bot.send_now') }}
     </button>
 
     <p class="text-xs opacity-40 mt-6 max-w-4xl">

@@ -1,10 +1,12 @@
 import { useUserStore } from '@/utils/stores/user.ts'
-import apiClientInst, { apiClient, type EmptyResponse } from './api.ts'
+import apiClientInst, { apiClient } from './api.ts'
 import router from '@/utils/router.ts'
 import { authStatus } from '@/main.ts'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const FRONT_URL = import.meta.env.VITE_FRONTEND_URL as string
+
+const AUTH_BASE = '/api/v1/auth'
 
 export interface WebAppLoginRequest {
   initData: string
@@ -30,42 +32,43 @@ export interface AccessResponse {
 }
 
 export class AuthService {
-  private static AUTH_BASE = '/api/v1/auth'
-  static async webappLogin(data: WebAppLoginRequest): Promise<AccessResponse | null> {
-    const res = await apiClientInst.post(`${this.AUTH_BASE}/login/webapp`, data)
-    if (res.status === 200) {
-      apiClient.setAccessToken(res.data.access_token)
-      return res.data
+  private static async postAccess(
+    path: string,
+    body: unknown,
+  ): Promise<AccessResponse | null> {
+    try {
+      const res = await apiClientInst.post(`${AUTH_BASE}${path}`, body)
+      if (res.status === 200 && res.data?.access_token) {
+        apiClient.setAccessToken(res.data.access_token)
+        return res.data as AccessResponse
+      }
+      return null
+    } catch (e) {
+      console.error('AuthService.postAccess', path, e)
+      return null
     }
-    return null
+  }
+
+  static async webappLogin(data: WebAppLoginRequest): Promise<AccessResponse | null> {
+    return this.postAccess('/login/webapp', data)
   }
 
   static async yandexLogin(data: YandexLoginRequest): Promise<AccessResponse | null> {
-    try {
-      const res = await apiClientInst.post(`${this.AUTH_BASE}/login/yandex`, data)
-      if (res.status === 200) {
-        apiClient.setAccessToken(res.data.access_token)
-        return res.data
-      }
-      return null
-    } catch (error) {
-      console.error('Yandex login error:', error)
-      return null
-    }
+    return this.postAccess('/login/yandex', data)
   }
 
   static async transferAccount(data: RecoveryRequest): Promise<boolean> {
     try {
-      const res = await apiClientInst.post(`${this.AUTH_BASE}/token/transfer`, data)
+      const res = await apiClientInst.post(`${AUTH_BASE}/token/transfer`, data)
       return res.status === 200
-    } catch (error) {
-      console.error('Transfer error:', error)
+    } catch (e) {
+      console.error('AuthService.transferAccount', e)
       return false
     }
   }
 
   static async startQrLogin() {
-    const res = await apiClientInst.get(`${this.AUTH_BASE}/login/getqr`)
+    const res = await apiClientInst.get(`${AUTH_BASE}/login/getqr`)
 
     if (res.status !== 200 || !res.data.login_id) {
       throw new Error('Failed to retrieve login ID from server.')
@@ -89,46 +92,42 @@ export class AuthService {
   }
 
   static async startSseConfirmation(loginId: string) {
-    let evtSource: any = null
+    let evtSource: EventSource | null = null
 
     const cancel = () => {
       if (evtSource) {
-        console.log('SSE connection manually closed.')
         evtSource.close()
         evtSource = null
       }
     }
 
-    const connect = (loginId: string) => {
-      return new Promise((resolve, reject) => {
-        const url = `${API_URL}api/v1/auth/sse/check/${loginId}`
+    const connect = (id: string) => {
+      return new Promise<string>((resolve, reject) => {
+        const url = `${API_URL}api/v1/auth/sse/check/${id}`
 
         try {
           evtSource = new EventSource(url)
         } catch (error) {
-          console.log(error)
           reject(new Error('EventSource initialization failed.'))
           return
         }
 
-        evtSource.onmessage = (event: any) => {
+        evtSource.onmessage = (event: MessageEvent) => {
           const data = JSON.parse(event.data)
           if (data.type === 'auth_success' && data.access_token) {
             cancel()
-            resolve(data.access_token)
             apiClient.setAccessToken(data.access_token)
+            resolve(data.access_token as string)
           } else if (data.type === 'auth_denied' || data.type === 'timeout') {
             cancel()
             reject(new Error(data.message || 'Login denied or timed out.'))
           }
         }
 
-        evtSource.onerror = (err: any) => {
-          console.error('SSE error, attempting reconnect:', err)
+        evtSource.onerror = () => {
           cancel()
-
           setTimeout(() => {
-            connect(loginId).then(resolve).catch(reject)
+            connect(id).then(resolve).catch(reject)
           }, 1000)
         }
       })
@@ -137,25 +136,10 @@ export class AuthService {
     return { authPromise: connect(loginId), cancel }
   }
 
-  static async checkLogin(loginId: string): Promise<boolean> {
-    const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/search/${loginId}`)
-    if (resp.status !== 200) {
-      return false
-    }
-    return true
-  }
-
-  static async validateLogin(loginId: string): Promise<boolean> {
-    const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/accept/${loginId}`)
-    if (resp.status !== 200) {
-      return false
-    }
-    return true
-  }
-
-  static async searchByCode(code: string): Promise<boolean> {
+  /** Подтвердить вход с другого устройства по login_id из QR (GET …/login/accept/:id) */
+  static async acceptRemoteLogin(loginId: string): Promise<boolean> {
     try {
-      const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/code/search/${code}`)
+      const resp = await apiClientInst.get(`${AUTH_BASE}/login/accept/${loginId}`)
       return resp.status === 200
     } catch {
       return false
@@ -164,7 +148,7 @@ export class AuthService {
 
   static async acceptByCode(code: string): Promise<boolean> {
     try {
-      const resp = await apiClientInst.get(`${this.AUTH_BASE}/login/code/accept/${code}`)
+      const resp = await apiClientInst.get(`${AUTH_BASE}/login/code/accept/${code}`)
       return resp.status === 200
     } catch {
       return false
@@ -173,7 +157,7 @@ export class AuthService {
 
   static async check(): Promise<boolean> {
     const store = useUserStore()
-    const res = await apiClientInst.get(`${this.AUTH_BASE}/check`)
+    const res = await apiClientInst.get(`${AUTH_BASE}/check`)
 
     if (!res || res.status !== 200) {
       store.clearUser()
@@ -188,40 +172,35 @@ export class AuthService {
 
   static async recreateTokens(): Promise<boolean> {
     try {
-      const resp = await apiClientInst.get(`${this.AUTH_BASE}/token/recreate-tokens`)
-      if (resp.status == 200) {
-        let data: AccessResponse = resp.data
-        apiClient.setAccessToken(data.access_token)
+      const resp = await apiClientInst.get(`${AUTH_BASE}/token/recreate-tokens`)
+      if (resp.status === 200 && resp.data?.access_token) {
+        apiClient.setAccessToken(resp.data.access_token)
         return true
       }
       return false
-    } catch (e) {
+    } catch {
       return false
     }
   }
 
   static async revokeRefreshSession(): Promise<boolean> {
-    const resp = await apiClientInst.get(`${this.AUTH_BASE}/token/revoke`)
-    if (resp.status !== 200) {
+    try {
+      const resp = await apiClientInst.get(`${AUTH_BASE}/token/revoke`)
+      return resp.status === 200
+    } catch {
       return false
     }
-    return true
   }
 
-  static async generateRecovery(): Promise<RecoveryResponse | boolean> {
-    const resp = await apiClientInst.get(`${this.AUTH_BASE}/token/recovery`)
-    if (resp.status == 200) {
-      let data: RecoveryResponse = resp.data
-      return data
-    }
-    return false
-  }
-
-  static async transferUser(data: RecoveryRequest): Promise<boolean> {
-    const resp = await apiClientInst.post(`${this.AUTH_BASE}/token/transfer`, data)
-    if (resp.status !== 200) {
+  static async generateRecovery(): Promise<RecoveryResponse | false> {
+    try {
+      const resp = await apiClientInst.get(`${AUTH_BASE}/token/recovery`)
+      if (resp.status === 200) {
+        return resp.data as RecoveryResponse
+      }
+      return false
+    } catch {
       return false
     }
-    return true
   }
 }

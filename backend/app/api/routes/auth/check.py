@@ -8,7 +8,11 @@ from app.services.caching import cache
 router = APIRouter(tags=["check"])
 
 @cache
-@router.get("/check", dependencies=[Depends(require_auth)])
+@router.get(
+    "/check",
+    dependencies=[Depends(require_auth)],
+    summary="Текущий пользователь по JWT",
+)
 async def check(request: Request):
     try:
         user = await db_client.get_user(uid=request.state.user_id)

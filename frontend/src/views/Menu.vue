@@ -43,7 +43,6 @@ const menuItems = [
         v-for="item in menuItems"
         :key="item.title"
         class="card bg-base-100 h-36 md:h-28 flex flex-col items-center justify-center gap-2.5 p-3 cursor-pointer hover:bg-base-200 active:scale-[0.97] transition-all duration-150 border border-base-300 rounded-2xl"
-        :class="{ 'col-span-2': item.isComponent }"
         @click="$router.push(item.path)"
       >
         <div

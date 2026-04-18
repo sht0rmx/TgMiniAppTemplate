@@ -12,7 +12,7 @@ defineProps<{
         <slot name="content">
           <div class="flex items-center gap-2">
             <i class="text-xl" :class="icon"></i>
-            <span>{{ $t(text || "Clear") }}</span>
+            <span v-if="text">{{ $t(text) }}</span>
           </div>
         </slot>
 

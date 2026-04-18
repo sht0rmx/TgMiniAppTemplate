@@ -4,6 +4,8 @@ import { apiClient } from '@/utils/api/api.ts'
 import { AuthService } from '@/utils/api/auth.api.ts'
 import router from '@/utils/router.ts'
 import { showPush } from '@/components/alert'
+import { showRecoveryCodeModal } from '@/main'
+import type { Router } from 'vue-router'
 
 export async function authInit(): Promise<boolean> {
   let res = await PingService.pingPong()
@@ -34,9 +36,36 @@ export async function authInit(): Promise<boolean> {
       },
     })
   } else {
-    if (router.currentRoute.value.path !== '/login')
-    {showPush('views.auth.without_login', '', 'alert-warning', 'ri-error-warning-line')}
+    if (router.currentRoute.value.path !== '/login') {
+      showPush('views.auth.without_login', '', 'alert-warning', 'ri-error-warning-line')
+    }
   }
 
   return false
+}
+
+/** Синхронизация профиля с бэкендом и переход (без модалки recovery). */
+export async function syncSessionThenNavigate(
+  router: Router,
+  redirectPath: string,
+): Promise<boolean> {
+  const ok = await AuthService.check()
+  if (ok) {
+    await router.push(redirectPath)
+  }
+  return ok
+}
+
+/**
+ * После получения access_token (cookie): опционально модалка recovery, затем check и переход.
+ */
+export async function finalizeAuthAndRedirect(
+  router: Router,
+  redirectPath: string,
+  options?: { recoveryCode?: string | null },
+): Promise<boolean> {
+  if (options?.recoveryCode) {
+    showRecoveryCodeModal(options.recoveryCode)
+  }
+  return syncSessionThenNavigate(router, redirectPath)
 }

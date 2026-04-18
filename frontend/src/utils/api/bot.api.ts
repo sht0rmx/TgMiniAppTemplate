@@ -1,5 +1,4 @@
 import apiClientInst from './api.ts'
-import type { EmptyResponse } from './api.ts'
 
 export interface SendMessageResponse {
   detail: string

@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from app.database.database import NotFound, db_client
-from app.middleware.auth import deny_bot, require_auth, require_origin
+from app.middleware.auth import deny_bot, require_auth
 from app.utils import parse_user_agent_data
 
 router = APIRouter(prefix="/session", tags=["Sessions"])
 
 
-@router.get("/current", dependencies=[Depends(require_origin), Depends(require_auth)])
+@router.get("/current", dependencies=[Depends(require_auth)])
 async def current_session(request: Request):
     session_id = request.state.session_id
     fingerprint = request.state.fingerprint
@@ -29,7 +29,7 @@ async def current_session(request: Request):
     )
 
 
-@router.get("/all", dependencies=[Depends(require_origin), Depends(require_auth)])
+@router.get("/all", dependencies=[Depends(require_auth)])
 async def all_sessions(request: Request):
     user_id = request.state.user_id
     current_session_id = request.state.session_id
@@ -63,7 +63,7 @@ async def all_sessions(request: Request):
 
 
 @router.get(
-    "/kill/{sid}", dependencies=[Depends(require_origin), Depends(deny_bot())]
+    "/kill/{sid}", dependencies=[Depends(deny_bot)]
 )
 async def kill_session(request: Request, sid: str):
     user_id = request.state.user_id

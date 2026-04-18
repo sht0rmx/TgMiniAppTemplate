@@ -13,7 +13,6 @@ import Devices from '@/views/SettingsViews/Devices.vue'
 import ApiKeys from '@/views/SettingsViews/ApiKeys.vue'
 import FilesView from '@/views/MenuViews/Files.vue'
 import BotChatView from '@/views/MenuViews/BotChat.vue'
-import YandexCallback from '@/views/YandexCallback.vue'
 import Recovery from '@/views/Recovery.vue'
 import ComponentsDemo from '@/views/ComponentsDemo.vue'
 const routes: RouteRecordRaw[] = [
@@ -31,9 +30,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/login/ya/callback',
-    name: 'YandexCallback',
-    component: YandexCallback,
-    meta: { titleKey: 'views.auth.yandex_callback', auth: false, noNav: true },
+    redirect: (to) => ({ path: '/login', query: to.query }),
   },
   {
     path: '/recovery',

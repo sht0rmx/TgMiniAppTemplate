@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from app.database.database import NotFound, db_client
-from app.middleware.auth import deny_bot, require_auth, require_origin
+from app.middleware.auth import deny_bot, require_auth
 from app.schemas.models import SendMessageRequest
 from app.services.telegram import telegram_service
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/bot", tags=["bot"])
 
 @router.post(
     "/send",
-    dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)],
+    dependencies=[Depends(deny_bot), Depends(require_auth)],
 )
 async def send_message_to_user(request: Request, body: SendMessageRequest):
     user_id = request.state.user_id

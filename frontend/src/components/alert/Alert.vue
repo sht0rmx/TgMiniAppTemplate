@@ -16,7 +16,7 @@ import { alerts } from './index'
         class="alert mt-3 md:mb-0 alert-soft pointer-events-auto"
       >
         <i :class="a.icon" class="text-2xl"></i>
-        <span>{{ $t(a.msg, a.subKey) }}</span>
+        <span>{{ $t(a.msg, a.subKey as Record<string, string>) }}</span>
       </div>
     </transition-group>
   </div>

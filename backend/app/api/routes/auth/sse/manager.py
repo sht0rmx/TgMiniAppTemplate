@@ -36,7 +36,6 @@ class SSEManager:
 
                 try:
                     event = await asyncio.wait_for(queue.get(), timeout=20)
-                    print(f"[SSE] sending {event}")
                     yield f"data: {json.dumps(event)}\n\n"
                 except asyncio.TimeoutError:
                     yield ": keep-alive\n\n"

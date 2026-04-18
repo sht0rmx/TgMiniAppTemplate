@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from app.database.database import Banned, NotFound, db_client
-from app.middleware.auth import deny_bot, require_auth, require_origin
+from app.middleware.auth import deny_bot, require_auth
 from app.schemas.models import CreateApiKeyRequest
 
 router = APIRouter(prefix="/apikeys", tags=["API Keys"])
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/apikeys", tags=["API Keys"])
 
 @router.get(
     "/all",
-    dependencies=[Depends(require_origin), Depends(deny_bot())],
+    dependencies=[Depends(deny_bot)],
 )
 async def list_api_keys(request: Request):
     user_id = request.state.user_id
@@ -40,7 +40,7 @@ async def list_api_keys(request: Request):
 
 @router.post(
     "/create",
-    dependencies=[Depends(require_origin), Depends(deny_bot())],
+    dependencies=[Depends(deny_bot)],
 )
 async def create_api_key(request: Request, body: CreateApiKeyRequest):
     user_id = request.state.user_id
@@ -69,7 +69,7 @@ async def create_api_key(request: Request, body: CreateApiKeyRequest):
 
 @router.delete(
     "/{key_id}",
-    dependencies=[Depends(require_origin), Depends(deny_bot())],
+    dependencies=[Depends(deny_bot)],
 )
 async def delete_api_key(request: Request, key_id: str):
     user_id = request.state.user_id
@@ -90,7 +90,7 @@ async def delete_api_key(request: Request, key_id: str):
 
 @router.patch(
     "/{key_id}/ban",
-    dependencies=[Depends(require_origin), Depends(deny_bot())],
+    dependencies=[Depends(deny_bot)],
 )
 async def toggle_ban_api_key(request: Request, key_id: str):
     user_id = request.state.user_id

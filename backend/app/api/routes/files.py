@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 from app.database.database import NotFound, db_client
-from app.middleware.auth import deny_bot, require_auth, require_origin
+from app.middleware.auth import deny_bot, require_auth
 
 
 class RenameFileRequest(BaseModel):
@@ -33,7 +33,7 @@ async def iter_file(data: bytes, start: int, end: int, chunk_size: int = 1024 * 
 
 @router.get(
     "/all",
-    dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)],
+    dependencies=[Depends(deny_bot), Depends(require_auth)],
 )
 async def list_files(request: Request):
     user_id = request.state.user_id
@@ -60,7 +60,7 @@ async def list_files(request: Request):
 
 @router.post(
     "/upload",
-    dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)],
+    dependencies=[Depends(deny_bot), Depends(require_auth)],
 )
 async def upload_file(request: Request, file: UploadFile = File(...)):
     user_id = request.state.user_id
@@ -88,7 +88,7 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
 
 @router.get(
     "/{file_id}",
-    dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)],
+    dependencies=[Depends(deny_bot), Depends(require_auth)],
 )
 async def download_file(request: Request, file_id: str):
     u = request.state.user_id
@@ -109,7 +109,6 @@ async def download_file(request: Request, file_id: str):
         m, _ = mimetypes.guess_type(name)
         m = m or "application/octet-stream"
 
-        # Заголовки для работы с Blob и Axios
         h = {
             "Content-Disposition": f'inline; filename="{name}"',
             "Content-Length": str(s),
@@ -134,7 +133,7 @@ async def download_file(request: Request, file_id: str):
     
 @router.delete(
     "/{file_id}",
-    dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)],
+    dependencies=[Depends(deny_bot), Depends(require_auth)],
 )
 async def delete_file(request: Request, file_id: str):
     user_id = request.state.user_id
@@ -156,7 +155,7 @@ async def delete_file(request: Request, file_id: str):
 
 @router.put(
     "/{file_id}/rename",
-    dependencies=[Depends(require_origin), Depends(deny_bot()), Depends(require_auth)],
+    dependencies=[Depends(deny_bot), Depends(require_auth)],
 )
 async def rename_file(request: Request, file_id: str, body: RenameFileRequest):
     user_id = request.state.user_id

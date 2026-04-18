@@ -15,9 +15,15 @@ import { AccountService } from '@/utils/api/account.api'
 import MenuCard from '@/components/menu/Card.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import { useI18n } from 'vue-i18n'
-import { setLocale, currentLocale, type Locale } from '@/utils/langs.ts'
+import YandexIcon from '@/assets/ya.svg'
+import {
+  setLocale,
+  currentLocale,
+  supportedLocales,
+} from '@/utils/langs.ts'
 import { authStatus, isTgEnv } from '@/main'
 import { setTheme, currentTheme, type Theme } from '@/utils/themes.ts'
+import { buildYandexOAuthUrl } from '@/utils/oauth/yandex'
 
 const { locale, t } = useI18n()
 
@@ -35,10 +41,12 @@ const themes: { id: Theme; label: string; icon: string }[] = [
   { id: 'winter', label: t('app.ui.light'), icon: 'ri-sun-line' },
 ]
 
-const langs: { id: Locale; label: string }[] = [
-  { id: 'en', label: t('lang_select.en') },
-  { id: 'ru', label: t('lang_select.ru') },
-]
+const langs = computed(() =>
+  supportedLocales.value.map((id) => ({
+    id,
+    label: t(`lang_select.${id}`),
+  })),
+)
 
 const logout = async () => {
   try {
@@ -55,6 +63,8 @@ const isDeleting = ref(false)
 const isLinking = ref(false)
 const showDeleteModal = ref(false)
 const showUnlinkModal = ref(false)
+const showLinkTelegramModal = ref(false)
+const showLinkYandexModal = ref(false)
 const unlinkProvider = ref<'telegram' | 'yandex' | null>(null)
 const linkedAccounts = computed(() => userStore.data?.linked_accounts || {})
 
@@ -67,53 +77,62 @@ const confirmDeleteAccount = async () => {
   try {
     const success = await AccountService.deleteAccount()
     if (success) {
-      showPush('User account deleted', '', 'alert-success', 'ri-check-line')
+      showPush('views.settings.delete_success', '', 'alert-success', 'ri-check-line')
       await AuthService.revokeRefreshSession()
       userStore.clearUser()
       await router.push('/login')
     } else {
-      showPush('Failed to delete account', '', 'alert-warning', 'ri-close-line')
+      showPush('views.settings.delete_failed', '', 'alert-warning', 'ri-close-line')
     }
   } catch (error) {
     console.error('Delete account error:', error)
-    showPush('Error deleting account', '', 'alert-warning', 'ri-close-line')
+    showPush('views.settings.delete_error', '', 'alert-warning', 'ri-close-line')
   } finally {
     isDeleting.value = false
     showDeleteModal.value = false
   }
 }
 
-const linkTelegram = async () => {
-  if (!isTgEnv.value || !WebApp) {
-    showPush('Not in Telegram environment', '', 'alert-warning', 'ri-error-warning-line')
-    return
-  }
+const linkTelegram = () => {
+  showLinkTelegramModal.value = true
+}
 
+const confirmLinkTelegram = async () => {
   try {
     const token = await AccountService.getTelegramLinkingToken()
     if (!token) {
-      showPush('Failed to get linking token', '', 'alert-warning', 'ri-close-line')
+      showPush('views.settings.link_token_failed', '', 'alert-warning', 'ri-close-line')
       return
     }
 
-    const botUsername = import.meta.env.VITE_TG_USERNAME
-    const startParam = `link_account_${token}`
-    WebApp.openLink(`https://t.me/${botUsername}?start=${startParam}`)
+    const botUsername = import.meta.env.VITE_TG_USERNAME as string
+    const payload = btoa(`link_telegram_${token}`)
+    const url = `https://t.me/${botUsername}?startapp=${encodeURIComponent(payload)}`
+
+    if (isTgEnv.value && WebApp) {
+      WebApp.openLink(url)
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
   } catch (error) {
     console.error('Link Telegram error:', error)
-    showPush('Error linking Telegram account', '', 'alert-warning', 'ri-close-line')
+    showPush('views.settings.link_telegram_error', '', 'alert-warning', 'ri-close-line')
   }
 }
 
 const linkYandex = () => {
-  const clientId = import.meta.env.VITE_YACID as string
+  showLinkYandexModal.value = true
+}
 
-  const url =
-    `https://oauth.yandex.ru/authorize?response_type=code` +
-    `&client_id=${clientId}` +
-    `&state=link_account`
-
-  window.location.href = url
+const confirmLinkYandex = () => {
+  const redirectUri =
+    import.meta.env.VITE_YANDEX_REDIRECT_URI ||
+    `${window.location.origin}/login`
+  window.location.href = buildYandexOAuthUrl({
+    clientId: import.meta.env.VITE_YACID as string,
+    state: 'link_account',
+    redirectUri,
+  })
 }
 
 const unlinkAccount = async (provider: 'telegram' | 'yandex') => {
@@ -128,14 +147,21 @@ const confirmUnlinkAccount = async () => {
     isLinking.value = true
     const success = await AccountService.unlinkAccount(unlinkProvider.value)
     if (success) {
-      showPush(`${unlinkProvider.value} unlinked`, '', 'alert-success', 'ri-check-line')
+      showPush(
+        unlinkProvider.value === 'telegram'
+          ? 'views.settings.unlink_success_telegram'
+          : 'views.settings.unlink_success_yandex',
+        '',
+        'alert-success',
+        'ri-check-line',
+      )
       await AuthService.check()
     } else {
-      showPush(`Failed to unlink ${unlinkProvider.value}`, '', 'alert-warning', 'ri-close-line')
+      showPush('views.settings.unlink_failed', '', 'alert-warning', 'ri-close-line')
     }
   } catch (error) {
     console.error(`Unlink ${unlinkProvider.value} error:`, error)
-    showPush('Error unlinking account', '', 'alert-warning', 'ri-close-line')
+    showPush('views.settings.unlink_error', '', 'alert-warning', 'ri-close-line')
   } finally {
     isLinking.value = false
     showUnlinkModal.value = false
@@ -232,16 +258,20 @@ const confirmUnlinkAccount = async () => {
       />
     </Menu>
 
-    <Menu header="views.account.linked_accounts" v-if:="authStatus">
+    <Menu header="views.account.linked_accounts" v-if="authStatus">
       <MenuCard>
         <template #content>
           <div class="flex w-full justify-between items-center">
             <div class="flex items-center gap-3">
               <i class="ri-telegram-2-line text-2xl text-blue-500" />
               <div>
-                <div class="font-semibold">Telegram</div>
+                <div class="font-semibold">{{ $t('views.account.provider_telegram') }}</div>
                 <div class="text-xs text-base-content/60">
-                  {{ linkedAccounts.telegram ? 'Linked' : 'Not linked' }}
+                  {{
+                    linkedAccounts.telegram
+                      ? $t('views.account.status_linked')
+                      : $t('views.account.status_not_linked')
+                  }}
                 </div>
               </div>
             </div>
@@ -253,7 +283,7 @@ const confirmUnlinkAccount = async () => {
               @click="unlinkAccount('telegram')"
             >
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.unlink') || 'Unlink' }}</span>
+              <span v-else>{{ $t('actions.unlink') }}</span>
             </button>
             <button
               v-else
@@ -262,7 +292,7 @@ const confirmUnlinkAccount = async () => {
               @click="linkTelegram"
             >
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.link') || 'Link' }}</span>
+              <span v-else>{{ $t('actions.link') }}</span>
             </button>
           </div>
         </template>
@@ -271,11 +301,15 @@ const confirmUnlinkAccount = async () => {
         <template #content>
           <div class="flex w-full justify-between items-center">
             <div class="flex items-center gap-3">
-              <i class="text-2xl text-red-500">Y</i>
+              <YandexIcon class="w-6 h-6 text-red-500" />
               <div>
-                <div class="font-semibold">Yandex</div>
+                <div class="font-semibold">{{ $t('views.account.provider_yandex') }}</div>
                 <div class="text-xs text-base-content/60">
-                  {{ linkedAccounts.yandex ? 'Linked' : 'Not linked' }}
+                  {{
+                    linkedAccounts.yandex
+                      ? $t('views.account.status_linked')
+                      : $t('views.account.status_not_linked')
+                  }}
                 </div>
               </div>
             </div>
@@ -287,18 +321,18 @@ const confirmUnlinkAccount = async () => {
               @click="unlinkAccount('yandex')"
             >
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.unlink') || 'Unlink' }}</span>
+              <span v-else>{{ $t('actions.unlink') }}</span>
             </button>
             <button v-else class="btn btn-sm btn-primary" :disabled="isLinking" @click="linkYandex">
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.link') || 'Link' }}</span>
+              <span v-else>{{ $t('actions.link') }}</span>
             </button>
           </div>
         </template>
       </MenuCard>
     </Menu>
 
-    <Menu header="views.settings.danger" v-if:="authStatus">
+    <Menu header="views.settings.danger" v-if="authStatus">
       <MenuButton
         @click="$router.push('/recovery')"
         icon="ri-shield-keyhole-line"
@@ -312,7 +346,7 @@ const confirmUnlinkAccount = async () => {
         <span v-if="isDeleting" class="loading loading-spinner loading-sm"></span>
       </MenuButton>
       <MenuButton
-        v-if:="!isTgEnv"
+        v-if="!isTgEnv"
         @click="logout"
         text="views.settings.logout"
         icon="ri-logout-box-line"
@@ -321,7 +355,7 @@ const confirmUnlinkAccount = async () => {
       </MenuButton>
     </Menu>
 
-    <div class="flex flex-col items-center gap-1 pb-2 opacity-50 select-none">
+    <div class="flex flex-col items-center gap-1 mb-2 opacity-50 select-none">
       <p class="text-xs font-medium">
         {{ t('views.settings.version', { version: appVersion }) }}
       </p>
@@ -349,6 +383,26 @@ const confirmUnlinkAccount = async () => {
       :is-loading="isLinking"
       @confirm="confirmUnlinkAccount"
       @cancel="showUnlinkModal = false"
+    />
+
+    <ConfirmationModal
+      :is-open="showLinkTelegramModal"
+      title="actions.link_telegram_title"
+      message="actions.link_telegram_message"
+      confirm-text="common.confirm"
+      confirm-button-class="btn-primary"
+      @confirm="confirmLinkTelegram"
+      @cancel="showLinkTelegramModal = false"
+    />
+
+    <ConfirmationModal
+      :is-open="showLinkYandexModal"
+      title="actions.link_yandex_title"
+      message="actions.link_yandex_message"
+      confirm-text="common.confirm"
+      confirm-button-class="btn-primary"
+      @confirm="confirmLinkYandex"
+      @cancel="showLinkYandexModal = false"
     />
   </div>
 </template>

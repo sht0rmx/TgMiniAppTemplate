@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -6,6 +7,8 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.routes.auth.sse.manager import sse_manager
 from app.database.database import Expired, NotFound, db_client
 from app.utils import create_hash
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/sse", tags=["sse"])
 
@@ -16,7 +19,6 @@ async def sse_endpoint(login_id: str):
     try:
         await db_client.get_login_session(login_hash=str(login_hash))
     except (NotFound, Expired):
-        print("error")
         return JSONResponse({"detail": "login_id not found"}, status_code=400)
 
     async def event_stream():
@@ -24,6 +26,6 @@ async def sse_endpoint(login_id: str):
             async for event in sse_manager.event_generator(login_id):
                 yield event
         except asyncio.CancelledError:
-            print(f"Client disconnected: {login_id}")
+            logger.debug("SSE client disconnected: %s", login_id)
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

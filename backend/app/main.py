@@ -1,13 +1,15 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
-from aiohttp.test_utils import TestClient
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from app.utils.translations import run as run_translations
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
+logger = logging.getLogger(__name__)
 
 from app.api.main import api_router
 from app.database.database import db_client
@@ -43,28 +45,62 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
+OPENAPI_TAGS = [
+    {
+        "name": "Auth",
+        "description": "Группа маршрутов `/auth` (вложенные теги ниже).",
+    },
+    {
+        "name": "login",
+        "description": "Вход: Telegram WebApp, Yandex OAuth, API-ключ бота, QR/коды.",
+    },
+    {"name": "tokens", "description": "JWT, refresh cookie, recovery, перенос аккаунта."},
+    {"name": "check", "description": "Проверка сессии и профиля."},
+    {"name": "account", "description": "Привязка/отвязка провайдеров, удаление аккаунта."},
+    {"name": "Sessions", "description": "Список устройств и отзыв refresh-сессий."},
+    {"name": "API Keys", "description": "Управление API-ключами."},
+    {"name": "files", "description": "Загрузка и выдача файлов."},
+    {"name": "bot", "description": "Сообщения и действия от имени бота (admin API key)."},
+    {"name": "sse", "description": "Server-Sent Events для подтверждения входа с другого устройства."},
+    {"name": "ping", "description": "Служебные эндпоинты."},
+]
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     validate_env()
+
+    scheduler.start()
+
+    await redis_client.init()
+    await telegram_service.init()
+
     await db_client.create_db()
     await db_client.seed_admin_key()
     await db_client.clear_db()
-    await redis_client.init()
-    await telegram_service.init()
+
     scheduler.add_job(db_client.clear_db, IntervalTrigger(hours=1))
-    scheduler.start()
+    scheduler.add_job(run_translations, IntervalTrigger(days=1))
 
     yield
 
     await telegram_service.close()
     await redis_client.close()
+
     scheduler.shutdown(wait=False)
 
 app = FastAPI(
     title="TgMiniAppsTemplate Backend",
+    description=(
+        "API для Telegram Mini App."
+    ),
+    version="1.0.0",
     openapi_url="/api/v1/openapi.json",
+    openapi_tags=OPENAPI_TAGS,
     generate_unique_id_function=custom_generate_unique_id,
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
 )
 scheduler = AsyncIOScheduler()
 

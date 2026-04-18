@@ -9,16 +9,14 @@ from urllib.parse import parse_qs
 from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from sqlalchemy import update
 
 from app.database.database import AlreadyCreated, Expired, NotFound, db_client
-from app.database.models.Users import User as UserModel
-from app.middleware.auth import deny_bot, require_origin
+from app.middleware.auth import deny_bot
 from app.middleware.spam import rate_limit
-from app.services.auth.AuthService import AuthUtils
+from app.schemas.models import User, WebAppLoginRequest, YandexLoginRequest
+from app.services.auth.AuthService import AuthUtils, auth_service
 from app.services.auth.YandexOAuthService import YandexOAuthService
 from app.services.telegram import telegram_service
-from app.schemas.models import User, WebAppLoginRequest
 from app.utils import create_hash, gen_code, parse_expire
 
 logger = logging.getLogger("uvicorn.error")
@@ -26,8 +24,13 @@ logger = logging.getLogger("uvicorn.error")
 router = APIRouter(prefix="/login", tags=["login"])
 
 
-@rate_limit(limit=5, period=60)  # 5 login attempts per 60s
-@router.post("/webapp", dependencies=[Depends(require_origin)])
+@rate_limit(limit=5, period=60)
+@router.post(
+    "/webapp",
+    dependencies=[],
+    summary="Вход через Telegram WebApp",
+    description="Проверяет `initData`, создаёт или обновляет пользователя и выдаёт access/refresh токены.",
+)
 async def webapp_login(
     request_data: WebAppLoginRequest,
     request: Request,
@@ -61,14 +64,7 @@ async def webapp_login(
         avatar_url=user_data.photo_url,
     )
 
-    # Set linked_telegram flag
-    async with db_client.async_session() as dbsession:
-        await dbsession.execute(
-            update(UserModel)
-            .where(UserModel.id == user.id)
-            .values(linked_telegram=True)
-        )
-        await dbsession.commit()
+    await db_client.link_user_telegram(str(user.id), user_data.id)
 
     fingerprint = request.state.fingerprint
     if not fingerprint:
@@ -90,45 +86,41 @@ async def webapp_login(
         user_id=user.id, session_id=session.id, role=str(user.role)
     )
 
-    # Generate recovery code for new users and send via Telegram
     recovery_code = None
     if is_new:
         try:
             code = gen_code(length=16)
             await db_client.create_recovery_code(user_id=str(user.id), code=code)
             recovery_code = code
-            # Try to send via Telegram if available
             asyncio.create_task(
                 _send_recovery_for_new_user(
                     user_id=str(user.id), telegram_id=user_data.id, code=code
                 )
             )
         except AlreadyCreated:
-            pass  # Code already exists
+            pass
 
-    resp = JSONResponse(content={"access_token": access_token, "recovery_code": recovery_code}, status_code=200)
-
-    resp.set_cookie(
-        key="refresh_token",
-        value=str(refresh_token),
-        httponly=True,
-        max_age=int(parse_expire(os.getenv("REFRESH_EXPIRE", "60d")).total_seconds()),
-        secure=not bool(os.getenv("DEV", "")),
-        samesite="lax",
+    return auth_service.json_with_refresh_cookie(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        recovery_code=recovery_code,
+        cookie_samesite="lax",
     )
-
-    return resp
 
 
 async def _send_recovery_for_new_user(user_id: str, telegram_id: int, code: str):
     try:
         await telegram_service.send_recovery_code(chat_id=telegram_id, code=code)
-        logger.info(f"Recovery code sent to telegram_id={telegram_id}")
+        logger.info("Recovery code sent to telegram_id=%s", telegram_id)
     except Exception as e:
-        logger.error(f"Failed to send recovery code to {telegram_id}: {e}")
+        logger.error("Failed to send recovery code to %s: %s", telegram_id, e)
 
 
-@router.get("/api-key")
+@router.get(
+    "/api-key",
+    summary="Вход по API-ключу (бот)",
+    description="Обмен `Bearer sk_...` на JWT с метаданными бота.",
+)
 async def bot_login(request: Request):
     auth = request.headers.get("authorization", "default").strip()
 
@@ -172,8 +164,12 @@ async def bot_login(request: Request):
     )
 
 
-@rate_limit(limit=5, period=60)  # 5 QR code generations per 60s
-@router.get("/getqr", dependencies=[Depends(require_origin)])
+@rate_limit(limit=5, period=60)
+@router.get(
+    "/getqr",
+    dependencies=[],
+    summary="QR / одноразовый код для входа с другого устройства",
+)
 async def get_qr_code(request: Request):
     fingerprint = request.state.fingerprint
     if not fingerprint:
@@ -188,8 +184,12 @@ async def get_qr_code(request: Request):
     return JSONResponse({"login_id": login_id, "code": login_code}, status_code=200)
 
 
-@rate_limit(limit=5, period=60)  # 5 login search attempts per 60s
-@router.get("/code/search/{code}", dependencies=[Depends(require_origin), Depends(deny_bot())])
+@rate_limit(limit=5, period=60)
+@router.get(
+    "/code/search/{code}",
+    dependencies=[Depends(deny_bot)],
+    summary="Проверить код входа",
+)
 async def search_by_code(code: str):
     try:
         await db_client.get_login_session(code=code)
@@ -198,8 +198,12 @@ async def search_by_code(code: str):
         return JSONResponse({"detail": "Login code not found or expired"}, status_code=400)
 
 
-@rate_limit(limit=5, period=60)  # 5 login accept attempts per 60s
-@router.get("/code/accept/{code}", dependencies=[Depends(require_origin), Depends(deny_bot())])
+@rate_limit(limit=5, period=60)
+@router.get(
+    "/code/accept/{code}",
+    dependencies=[Depends(deny_bot)],
+    summary="Подтвердить вход по коду",
+)
 async def accept_by_code(request: Request, code: str):
     user_id = request.state.user_id
     role = request.state.role
@@ -208,22 +212,31 @@ async def accept_by_code(request: Request, code: str):
         return JSONResponse({"detail": "Missing user_id"}, status_code=400)
 
     try:
-        await db_client.accept_login(code=code, user_id=user_id, role=role)
+        await auth_service.accept_login(code=code, user_id=user_id, role=role)
         return JSONResponse({"detail": "OK!"}, status_code=200)
     except (NotFound, Expired):
         return JSONResponse({"detail": "Login code not found or expired"}, status_code=400)
 
 
-@router.get("/search/{loginid}", dependencies=[Depends(require_origin), Depends(deny_bot())])
+@router.get(
+    "/search/{loginid}",
+    dependencies=[Depends(deny_bot)],
+    summary="Проверить сессию по login_id",
+)
 async def check_login(loginid: str):
     try:
-        await db_client.get_login_session(login_hash=loginid)
+        login_hash = create_hash("LOGIN_SECRET", str(loginid))
+        await db_client.get_login_session(login_hash=login_hash)
         return JSONResponse({"detail": "Login found"}, status_code=200)
     except (NotFound, Expired):
         return JSONResponse({"detail": "Login not founded"}, status_code=400)
 
 
-@router.get("/accept/{loginid}", dependencies=[Depends(require_origin), Depends(deny_bot())])
+@router.get(
+    "/accept/{loginid}",
+    dependencies=[Depends(deny_bot)],
+    summary="Подтвердить вход по login_id",
+)
 async def validate_login(request: Request, loginid: str):
     user_id = request.state.user_id
     role = request.state.role
@@ -232,82 +245,63 @@ async def validate_login(request: Request, loginid: str):
         return JSONResponse({"detail": "Missing user_id"}, status_code=400)
 
     try:
-        await db_client.accept_login(login=loginid, user_id=user_id, role=role)
+        await auth_service.accept_login(login=loginid, user_id=user_id, role=role)
         return JSONResponse({"detail": "OK!"}, status_code=200)
     except (NotFound, Expired):
         return JSONResponse({"detail": "Login not founded"}, status_code=400)
 
 
-@rate_limit(limit=5, period=60)  # 5 login attempts per 60s
-@router.post("/yandex", dependencies=[Depends(require_origin)])
+@rate_limit(limit=5, period=60)
+@router.post(
+    "/yandex",
+    dependencies=[],
+    summary="Вход через Yandex OAuth",
+)
 async def yandex_login(
-    request_data: dict,
+    request_data: YandexLoginRequest,
     request: Request,
     user_agent: str = Header(default=""),
 ):
-    """
-    Handle Yandex OAuth callback.
-    Expected: {"code": "authorization_code_from_yandex"}
-    """
-    code = request_data.get("code")
+    code = request_data.code
     if not code:
         return JSONResponse({"detail": "Missing authorization code"}, status_code=400)
 
     try:
-        # Initialize Yandex OAuth service
         oauth_service = YandexOAuthService()
-        
-        # Authenticate user with Yandex
+    except ValueError as e:
+        logger.error("Yandex OAuth configuration error: %s", e)
+        return JSONResponse(
+            {"detail": "OAuth service not configured"}, status_code=500
+        )
+
+    try:
         auth_result = await oauth_service.authenticate_user(code)
         if not auth_result:
             return JSONResponse(
                 {"detail": "Failed to authenticate with Yandex"}, status_code=401
             )
-        
-        user_info = auth_result["user_info"]
-        
-        # Extract user data from Yandex response
-        yandex_id = user_info.get("id")
-        username = user_info.get("login", "")
-        email = user_info.get("default_email", "")
-        name = f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
-        avatar_url = user_info.get("default_avatar_id")
-        
-        if avatar_url:
-            avatar_url = f"https://avatars.yandex.net/get-yapic/{avatar_url}/islands-200"
-        
-        if not name:
-            name = username or email
-        
-        # Use a unique fake telegram_id based on yandex_id for users that only have Yandex
-        # This is a workaround since telegram_id is required and unique
-        fake_telegram_id = int(str(yandex_id)[:15]) if yandex_id and len(str(yandex_id)) > 0 else abs(hash(username or email)) % (10 ** 15)
-        
-        user, is_new = await db_client.update_user(
-            telegram_id=fake_telegram_id,
-            username=username,
-            name=name,
-            avatar_url=avatar_url,
+
+        profile = YandexOAuthService.parse_profile(auth_result["user_info"])
+        yandex_id = profile["yandex_id"]
+        if not yandex_id:
+            return JSONResponse({"detail": "Invalid Yandex response"}, status_code=400)
+
+        user, is_new = await db_client.find_or_create_yandex_user(
+            yandex_id=yandex_id,
+            username=profile["username"],
+            name=profile["name"],
+            avatar_url=profile["avatar_url"],
+            email=profile["email"],
         )
-        
-        # Update Yandex-specific fields
-        async with db_client.async_session() as dbsession:
-            await dbsession.execute(
-                update(UserModel)
-                .where(UserModel.id == user.id)
-                .values(yandex_id=str(yandex_id), linked_yandex=True)
-            )
-            await dbsession.commit()
-        
-        # Get fingerprint for session
+        await db_client.link_user_yandex(str(user.id), yandex_id)
+
         fingerprint = request.state.fingerprint
         if not fingerprint:
             return JSONResponse({"detail": "Missing fingerprint"}, status_code=400)
-        
+
         ip = request.client.host if request.client else "127.0.0.1"
         refresh_token = str(uuid.uuid4())
-        
-        # Create refresh session
+
         session = await db_client.create_refresh_session(
             refresh_token=refresh_token,
             fingerprint=fingerprint,
@@ -315,45 +309,28 @@ async def yandex_login(
             user_id=str(user.id),
             user_agent=user_agent,
         )
-        
-        # Generate access token
+
         access_token = AuthUtils.gen_jwt_token(
             user_id=user.id, session_id=session.id, role=str(user.role)
         )
-        
-        # Generate recovery code for new users
+
         recovery_code = None
         if is_new:
             try:
-                code = gen_code(length=16)
-                await db_client.create_recovery_code(user_id=str(user.id), code=code)
-                recovery_code = code
-                # Note: No Telegram for Yandex-only users, code shown in web
+                rec = gen_code(length=16)
+                await db_client.create_recovery_code(user_id=str(user.id), code=rec)
+                recovery_code = rec
             except AlreadyCreated:
                 pass
-        
-        # Create response with access token
-        resp = JSONResponse(content={"access_token": access_token, "recovery_code": recovery_code}, status_code=200)
-        
-        # Set refresh token cookie
-        resp.set_cookie(
-            key="refresh_token",
-            value=str(refresh_token),
-            httponly=True,
-            max_age=int(parse_expire(os.getenv("REFRESH_EXPIRE", "60d")).total_seconds()),
-            secure=not bool(os.getenv("DEV", "")),
-            samesite="lax",
+
+        return auth_service.json_with_refresh_cookie(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            recovery_code=recovery_code,
+            cookie_samesite="none",
+            cookie_path="/",
         )
-        
-        return resp
-        
-    except ValueError as e:
-        logger.error(f"Yandex OAuth configuration error: {e}")
-        return JSONResponse(
-            {"detail": "OAuth service not configured"}, status_code=500
-        )
+
     except Exception as e:
-        logger.error(f"Error during Yandex OAuth login: {e}")
-        return JSONResponse(
-            {"detail": "Internal server error"}, status_code=500
-        )
+        logger.error("Error during Yandex OAuth login: %s", e)
+        return JSONResponse({"detail": "Internal server error"}, status_code=500)

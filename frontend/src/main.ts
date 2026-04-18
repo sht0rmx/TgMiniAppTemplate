@@ -5,10 +5,11 @@ import { createPinia } from 'pinia'
 
 import App from '@/App.vue'
 import router from '@/utils/router.ts'
-import { i18n } from '@/utils/langs.ts'
+import { i18n, initializeLocale, fetchAvailableLocales } from '@/utils/langs.ts'
 import { setTheme } from '@/utils/themes.ts'
 import { authInit } from '@/utils/auth.ts'
 import { checkTg } from '@/utils/telegram.ts'
+import { handleError } from '@/utils/help.ts'
 
 if (import.meta.env.DEV) {
   import('eruda').then((eruda) => eruda.default.init())
@@ -28,6 +29,8 @@ export let lockPage = computed(
 export let recoveryCode: Ref<string> = ref('')
 export let showRecoveryModal: Ref<boolean> = ref(false)
 
+export const drawerOpen = ref(false)
+
 export const showRecoveryCodeModal = (code: string) => {
   recoveryCode.value = code
   showRecoveryModal.value = true
@@ -46,6 +49,25 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(i18n)
+
+await initializeLocale()
+await fetchAvailableLocales()
+
+app.config.errorHandler = (err, instance, info) => {
+  console.error('[Vue Error]', err, info)
+  handleError(err, 'Vue Error')
+}
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[Unhandled Promise Rejection]', event.reason)
+  handleError(event.reason, 'Unhandled Promise Rejection')
+})
+
+window.addEventListener('error', (event) => {
+  console.error('[Global Error]', event.error)
+  handleError(event.error, 'Global Error')
+})
+
 app.mount('#app')
 
 setTheme()

@@ -127,19 +127,11 @@ def require_admin():
     return _check
 
 
-def deny_bot():
-    def _check(payload=Depends(require_auth)):
-        if payload.get("is_bot"):
-            raise HTTPException(403, "Access denied")
-        return payload
-    return _check
+def deny_bot(payload=Depends(require_auth)):
+    if payload.get("is_bot"):
+        raise HTTPException(403, "Access denied for bots")
+    return payload
 
-
-def require_origin(request: Request):
-    allowed = os.getenv("CORS_ORIGINS", "").split(",")
-    origin = request.headers.get("origin")
-    if origin and origin not in allowed:
-        raise HTTPException(403, "Origin not allowed")
 
 
 class FingerprintMiddleware(BaseHTTPMiddleware):

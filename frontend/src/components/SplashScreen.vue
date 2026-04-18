@@ -1,7 +1,7 @@
 <template>
   <div class="w-full h-full bg-base-200">
     <transition name="fade">
-      <div id="splash" aria-hidden="true" class="bg-background/95 flex items-center justify-center">
+      <div id="splash" aria-hidden="true" class="bg-background/95 flex flex-col items-center justify-center gap-4 relative">
         <svg
           aria-label="logo"
           class="logo"
@@ -32,10 +32,32 @@
             fill="url(#shine)"
           />
         </svg>
+        <Transition name="fade-up">
+          <div v-if="showSplash" class="text-rotate font-mono text-xl font-semibold absolute bottom-1/4 left-1/2 -translate-x-1/2">
+            <span class="inner-wrapper">
+              <span class="mx-auto">{{ $t('splash.phrase_1') }}</span>
+              <span class="mx-auto">{{ $t('splash.phrase_2') }}</span>
+              <span class="mx-auto">{{ $t('splash.phrase_3') }}</span>
+              <span class="mx-auto">{{ $t('splash.phrase_4') }}</span>
+            </span>
+          </div>
+        </Transition>
       </div>
     </transition>
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+
+const showSplash = ref(false)
+
+onMounted(() => {
+  setTimeout(() => {
+    showSplash.value = true
+  }, 1000)
+})
+</script>
 
 <style scoped>
 #splash {
@@ -63,5 +85,26 @@
 .fade-enter-to,
 .fade-leave-from {
   opacity: 1;
+}
+
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+.fade-up-enter-to,
+.fade-up-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

@@ -1,67 +1,60 @@
 import apiClientInst from './api.ts'
-import { AuthService } from './auth.api.ts'
+
+const ACCOUNT_BASE = '/api/v1/account'
 
 export interface LinkTokenResponse {
   token: string
 }
 
+async function ok(
+  request: () => Promise<{ status: number }>,
+  logLabel: string,
+): Promise<boolean> {
+  try {
+    const res = await request()
+    return res.status === 200
+  } catch (error) {
+    console.error(logLabel, error)
+    return false
+  }
+}
+
 export class AccountService {
-  private static ACCOUNT_BASE = '/api/v1/account'
   static async getTelegramLinkingToken(): Promise<string | null> {
     try {
-      const res = await apiClientInst.post(`${this.ACCOUNT_BASE}/link/telegram/token`, {})
+      const res = await apiClientInst.post(`${ACCOUNT_BASE}/link/telegram/token`, {})
       if (res.status === 200 && res.data.token) {
         return res.data.token
       }
       return null
     } catch (error) {
-      console.error('Error getting Telegram linking token:', error)
+      console.error('getTelegramLinkingToken', error)
       return null
     }
   }
+
   static async linkTelegram(initData: string): Promise<boolean> {
-    try {
-      const res = await apiClientInst.post(`${this.ACCOUNT_BASE}/link/telegram`, {
-        initData,
-      })
-      return res.status === 200
-    } catch (error) {
-      console.error('Error linking Telegram:', error)
-      return false
-    }
+    return ok(
+      () => apiClientInst.post(`${ACCOUNT_BASE}/link/telegram`, { initData }),
+      'linkTelegram',
+    )
   }
+
   static async linkYandex(code: string): Promise<boolean> {
-    try {
-      const res = await apiClientInst.post(`${this.ACCOUNT_BASE}/link/yandex`, {
-        code,
-      })
-      return res.status === 200
-    } catch (error) {
-      console.error('Error linking Yandex:', error)
-      return false
-    }
+    return ok(
+      () => apiClientInst.post(`${ACCOUNT_BASE}/link/yandex`, { code }),
+      'linkYandex',
+    )
   }
 
   static async unlinkAccount(provider: 'telegram' | 'yandex'): Promise<boolean> {
-    try {
-      const res = await apiClientInst.post(
-        `${this.ACCOUNT_BASE}/unlink/${provider}`,
-        {}
-      )
-      return res.status === 200
-    } catch (error) {
-      console.error(`Error unlinking ${provider}:`, error)
-      return false
-    }
+    return ok(
+      () => apiClientInst.post(`${ACCOUNT_BASE}/unlink/${provider}`, {}),
+      `unlinkAccount:${provider}`,
+    )
   }
 
   static async deleteAccount(): Promise<boolean> {
-    try {
-      const res = await apiClientInst.delete(`${this.ACCOUNT_BASE}`)
-      return res.status === 200
-    } catch (error) {
-      console.error('Error deleting account:', error)
-      return false
-    }
+    return ok(() => apiClientInst.delete(`${ACCOUNT_BASE}`), 'deleteAccount')
   }
 }

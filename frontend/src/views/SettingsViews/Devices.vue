@@ -7,6 +7,7 @@ import { showPush } from '@/components/alert'
 import Menu from '@/components/menu/Menu.vue'
 import MenuButton from '@/components/menu/Button.vue'
 import Header from '@/components/Header.vue'
+import { useRouter } from 'vue-router'
 
 const sessions = ref<Session[]>([])
 const currentSession = ref<Session | null>(null)
@@ -14,11 +15,18 @@ const otherSessions = ref<Session[]>([])
 
 const selectedSession = ref<Session | null>(null)
 const drawerOpen = ref(false)
+
 const showScanner = ref(false)
 const showLinkDialog = ref(false)
 const codeInput = ref('')
 const isAccepting = ref(false)
 const isLoadingSessions = ref(true)
+
+// Для подтверждения после сканирования QR
+const showQrConfirm = ref(false)
+const scannedLoginId = ref<string | null>(null)
+
+const router = useRouter()
 
 let scanner: Html5Qrcode | null = null
 
@@ -66,6 +74,11 @@ const closeLinkDialog = () => {
   codeInput.value = ''
 }
 
+const handleStartScanner = () => {
+  closeLinkDialog()
+  startScanner()
+}
+
 // QR Scanner
 const startScanner = async () => {
   showScanner.value = true
@@ -100,18 +113,36 @@ const handleScan = async (decodedText: string) => {
     if (loginid) {
       const loginId = atob(loginid)
       await stopScanner()
-      isAccepting.value = true
-      const ok = await AuthService.validateLogin(loginId)
-      isAccepting.value = false
-      if (ok) {
-        showPush('views.devices.accept_success', '', 'alert-success', 'ri-check-line')
-      } else {
-        showPush('views.devices.accept_failed', '', 'alert-warning', 'ri-error-warning-line')
-      }
+      scannedLoginId.value = loginId
+      showQrConfirm.value = true
     }
   } catch (e) {
     console.warn('QR parse error', e)
   }
+}
+
+const handleQrAccept = async () => {
+  if (!scannedLoginId.value) return
+  isAccepting.value = true
+  try {
+    const ok = await AuthService.acceptRemoteLogin(scannedLoginId.value)
+    if (ok) {
+      showPush('views.devices.accept_success', '', 'alert-success', 'ri-check-line')
+      showQrConfirm.value = false
+      scannedLoginId.value = null
+    } else {
+      showPush('views.devices.accept_failed', '', 'alert-warning', 'ri-error-warning-line')
+    }
+  } catch {
+    showPush('views.devices.accept_failed', '', 'alert-warning', 'ri-error-warning-line')
+  } finally {
+    isAccepting.value = false
+  }
+}
+
+const handleQrDecline = () => {
+  showQrConfirm.value = false
+  scannedLoginId.value = null
 }
 
 // Code accept
@@ -343,7 +374,7 @@ onUnmounted(() => stopScanner())
         <div class="flex flex-col gap-3">
           <button
             class="btn btn-soft btn-accent w-full flex items-center justify-center gap-2"
-            @click="closeLinkDialog();startScanner()"
+            @click="handleStartScanner()"
           >
             <i class="ri-qr-scan-2-line text-lg"></i>
             {{ $t('views.devices.scan.title') }}
@@ -388,18 +419,74 @@ onUnmounted(() => stopScanner())
       </form>
     </div>
 
-    <!-- QR Scanner dialog -->
     <input type="checkbox" class="modal-toggle" v-model="showScanner" />
     <div class="modal">
-      <div class="modal-box max-w-md">
-        <h3 class="font-bold text-lg mb-4">{{ $t('views.devices.scan.title') }}</h3>
-        <div id="scanner" class="w-full h-96 rounded-lg bg-base-200"></div>
-        <div class="modal-action">
+      <div class="modal-box max-w-md flex flex-col items-center">
+        <h3 class="font-bold text-lg w-full text-left mb-4">{{ $t('views.devices.scan.title') }}</h3>
+        
+        <div class="relative w-full max-w-300px aspect-square p-2 flex items-center justify-center my-2">
+          <div class="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-2xl opacity-80 pointer-events-none z-10"></div>
+          <div class="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-2xl opacity-80 pointer-events-none z-10"></div>
+          <div class="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-2xl opacity-80 pointer-events-none z-10"></div>
+          <div class="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-2xl opacity-80 pointer-events-none z-10"></div>
+
+          <div id="scanner" class="w-full h-full bg-black rounded-xl overflow-hidden shadow-inner flex items-center justify-center"></div>
+        </div>
+
+        <div class="modal-action w-full mt-6">
           <button class="btn w-full" @click="stopScanner">
             {{ $t('views.devices.scan.close') }}
           </button>
         </div>
       </div>
     </div>
+    <!-- QR Confirm drawer -->
+    <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': showQrConfirm }">
+      <div class="modal-box bg-base-100 rounded-t-3xl">
+        <div class="px-5 pb-4 flex flex-col items-center text-center">
+          <h3 class="font-bold text-lg mb-1 w-full text-center">
+            {{ $t('views.devices.qr_confirm.title') }}
+          </h3>
+          <p class="text-sm opacity-60 mb-5 w-full text-center">
+            {{ $t('views.devices.qr_confirm.hint') }}
+          </p>
+          <div class="flex gap-2 w-full justify-center">
+            <button class="btn btn-primary flex-1" :disabled="isAccepting" @click="handleQrAccept">
+              <span v-if="isAccepting" class="loading loading-spinner loading-sm"></span>
+              <span v-else>{{ $t('common.yes') }}</span>
+            </button>
+            <button class="btn btn-ghost flex-1" :disabled="isAccepting" @click="handleQrDecline">
+              {{ $t('common.no') }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <form
+        method="dialog"
+        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
+        @click="handleQrDecline"
+      >
+        <button>close</button>
+      </form>
+    </div>
   </div>
 </template>
+<style scoped>
+/* Скрываем встроенную рамку, тени и подсказки библиотеки */
+:deep(#scanner__scan_region) {
+  /* Это контейнер, где библиотека рисует свою рамку */
+  border: none !important;
+}
+
+:deep(#qr-shaded-region) {
+  /* Скрываем затемнение по краям, которое делает библиотека */
+  border-width: 0 !important;
+  opacity: 0 !important;
+}
+
+:deep(video) {
+  object-fit: cover !important;
+  width: 100% !important;
+  border-radius: 0.75rem;
+}
+</style>

@@ -3,7 +3,7 @@ import { nav_items } from '@/main'
 </script>
 
 <template>
-  <div class="dock dock-sm md:hidden" id="navbar">
+  <div class="dock dock-sm md:hidden z-40" id="navbar">
     <button
       v-for="i in nav_items"
       :key="i.to"

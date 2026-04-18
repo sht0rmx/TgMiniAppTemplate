@@ -41,7 +41,6 @@ class Client {
         const isTokensEndpoint = original?.url?.includes('/api/v1/auth/token/get-tokens')
         const isLoginEndpoint = original?.url?.includes('/api/v1/auth/login/webapp')
 
-        // Не пытаемся обновить токен для невалидных запросов (400)
         if (err.response?.status === 400) {
           console.warn('Bad request:', err.response.data)
           return Promise.reject(err)
@@ -102,22 +101,21 @@ class Client {
   async setFingerprint(): Promise<string> {
     if (this.fingerprint) return this.fingerprint
 
-    const STORAGE_KEY = 'device_fingerprint'
-    const stored = localStorage.getItem(STORAGE_KEY)
+    try {
+      const fp = await fpPromise
+      const result = await fp.get()
 
-    if (stored) {
-      this.fingerprint = stored
-      this.axios.defaults.headers.common['Fingerprint'] = stored
-      return stored
+      const freshId = result.visitorId
+
+      // Устанавливаем в заголовок и сохраняем только в оперативной памяти
+      this.fingerprint = freshId
+      this.axios.defaults.headers.common['Fingerprint'] = freshId
+
+      return freshId
+    } catch (error) {
+      console.error('Ошибка генерации фингерпринта:', error)
+      throw error
     }
-
-    const fp = await fpPromise
-    const result = await fp.get()
-
-    localStorage.setItem(STORAGE_KEY, result.visitorId)
-    this.fingerprint = result.visitorId
-    this.axios.defaults.headers.common['Fingerprint'] = result.visitorId
-    return result.visitorId
   }
 
   public getAxiosInstance(): AxiosInstance {

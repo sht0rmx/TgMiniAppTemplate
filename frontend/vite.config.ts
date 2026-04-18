@@ -6,6 +6,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import svgLoader from 'vite-svg-loader'
 
 import pkg from './package.json' with { type: 'json' }
 
@@ -37,6 +38,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     tailwindcss(),
+    svgLoader(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
