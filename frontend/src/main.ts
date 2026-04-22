@@ -5,10 +5,10 @@ import { createPinia } from 'pinia'
 
 import App from '@/App.vue'
 import router from '@/utils/router.ts'
-import { i18n, initializeLocale, fetchAvailableLocales } from '@/utils/langs.ts'
-import { setTheme } from '@/utils/themes.ts'
+import { i18n, initializeLocale, fetchAvailableLocales } from '@/utils/managers/langs'
+import { setTheme } from '@/utils/managers/themes'
 import { authInit } from '@/utils/auth.ts'
-import { checkTg } from '@/utils/telegram.ts'
+import { checkTg } from '@/utils/providers/telegram'
 import { handleError } from '@/utils/help.ts'
 
 if (import.meta.env.DEV) {
@@ -44,16 +44,20 @@ export const nav_items = [
   { icon: 'ri-menu-line', label: 'components.dock.menu', to: '/menu' },
 ]
 
+const initApp = async () => {
+  await initializeLocale()
+  await fetchAvailableLocales()
+  checkTg()
+  authStatus.value = await authInit()
+}
+
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
 app.use(i18n)
 
-await initializeLocale()
-await fetchAvailableLocales()
-
-app.config.errorHandler = (err, instance, info) => {
+app.config.errorHandler = (err, _, info) => {
   console.error('[Vue Error]', err, info)
   handleError(err, 'Vue Error')
 }
@@ -68,12 +72,11 @@ window.addEventListener('error', (event) => {
   handleError(event.error, 'Global Error')
 })
 
-app.mount('#app')
-
 setTheme()
-checkTg()
-authStatus.value = await authInit()
+app.mount('#app')
+await initApp().then(() => {
+  if (!technicalWork && !unableAccessApi.value) {
+    isLoading.value = false
+  }
+})
 
-if (!technicalWork && !unableAccessApi.value) {
-  isLoading.value = false
-}

@@ -3,7 +3,7 @@ import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { Html5Qrcode } from 'html5-qrcode'
 import { SessionsService, type Session } from '@/utils/api/sessions.api.ts'
 import { AuthService } from '@/utils/api/auth.api.ts'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 import Menu from '@/components/menu/Menu.vue'
 import MenuButton from '@/components/menu/Button.vue'
 import Header from '@/components/Header.vue'
@@ -471,15 +471,13 @@ onUnmounted(() => stopScanner())
     </div>
   </div>
 </template>
+
 <style scoped>
-/* Скрываем встроенную рамку, тени и подсказки библиотеки */
 :deep(#scanner__scan_region) {
-  /* Это контейнер, где библиотека рисует свою рамку */
   border: none !important;
 }
 
 :deep(#qr-shaded-region) {
-  /* Скрываем затемнение по краям, которое делает библиотека */
   border-width: 0 !important;
   opacity: 0 !important;
 }

@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { BotService, type SendMessageResponse } from '@/utils/api/bot.api.ts'
 import Header from '@/components/Header.vue'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 
 const isSending = ref(false)
 

@@ -2,7 +2,7 @@
 import Header from '@/components/Header.vue'
 import Card from '@/components/menu/Card.vue'
 import Menu from '@/components/menu/Menu.vue'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 import { ref } from 'vue'
 
 const selectedComponent = ref<string>('header')

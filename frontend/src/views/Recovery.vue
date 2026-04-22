@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { AuthService } from '@/utils/api/auth.api'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 import { authStatus } from '@/main'
 
 const router = useRouter()

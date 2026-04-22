@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { type ApiKey, ApiKeysService } from '@/utils/api/apikeys.api.ts'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 import Header from '@/components/Header.vue'
 import Menu from '@/components/menu/Menu.vue'
 import MenuButton from '@/components/menu/Button.vue'

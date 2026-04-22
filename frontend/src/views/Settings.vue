@@ -1,61 +1,30 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { authStatus, isTgEnv } from '@/main'
+
+import { showPush } from '@/utils/alert'
+import { WebApp } from '@/utils/providers/telegram'
+import { useUserStore } from '@/utils/stores/user'
 import { AuthService } from '@/utils/api/auth.api'
+import { buildYandexOAuthUrl } from '@/utils/providers/yandex'
+import { AccountService } from '@/utils/api/account.api'
+import { setTheme, currentTheme, themes } from '@/utils/managers/themes'
+import { setLocale, currentLocale, langs } from '@/utils/managers/langs'
+
+import YandexIcon from '@/assets/ya.svg'
 import Header from '@/components/Header.vue'
 import LoginCard from '@/components/LoginCard.vue'
+
 import Menu from '@/components/menu/Menu.vue'
+import MenuCard from '@/components/menu/Card.vue'
 import MenuButton from '@/components/menu/Button.vue'
 import MenuContent from '@/components/menu/Content.vue'
 import MenuDropdown from '@/components/menu/Dropdown.vue'
-import { ref, computed } from 'vue'
-import { useUserStore } from '@/utils/stores/user'
-import { useRouter } from 'vue-router'
-import { showPush } from '@/components/alert'
-import { WebApp } from '@/utils/telegram'
-import { AccountService } from '@/utils/api/account.api'
-import MenuCard from '@/components/menu/Card.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
-import { useI18n } from 'vue-i18n'
-import YandexIcon from '@/assets/ya.svg'
-import {
-  setLocale,
-  currentLocale,
-  supportedLocales,
-} from '@/utils/langs.ts'
-import { authStatus, isTgEnv } from '@/main'
-import { setTheme, currentTheme, type Theme } from '@/utils/themes.ts'
-import { buildYandexOAuthUrl } from '@/utils/oauth/yandex'
 
 const { locale, t } = useI18n()
-
-const appVersion = __APP_VERSION__
-const buildHash = __BUILD_HASH__
-const buildDate = new Date(__BUILD_DATE__).toLocaleDateString(locale.value, {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-})
-
-const themes: { id: Theme; label: string; icon: string }[] = [
-  { id: 'system', label: t('app.ui.system'), icon: 'ri-computer-line' },
-  { id: 'dim', label: t('app.ui.dark'), icon: 'ri-moon-line' },
-  { id: 'winter', label: t('app.ui.light'), icon: 'ri-sun-line' },
-]
-
-const langs = computed(() =>
-  supportedLocales.value.map((id) => ({
-    id,
-    label: t(`lang_select.${id}`),
-  })),
-)
-
-const logout = async () => {
-  try {
-    await AuthService.revokeRefreshSession()
-    window.location.reload()
-  } catch (error) {
-    console.error('Logout failed', error)
-  }
-}
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -67,6 +36,23 @@ const showLinkTelegramModal = ref(false)
 const showLinkYandexModal = ref(false)
 const unlinkProvider = ref<'telegram' | 'yandex' | null>(null)
 const linkedAccounts = computed(() => userStore.data?.linked_accounts || {})
+
+const appVersion = __APP_VERSION__
+const buildHash = __BUILD_HASH__
+const buildDate = new Date(__BUILD_DATE__).toLocaleDateString(locale.value, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+})
+
+const logout = async () => {
+  try {
+    await AuthService.revokeRefreshSession()
+    window.location.reload()
+  } catch (error) {
+    console.error('Logout failed', error)
+  }
+}
 
 const deleteAccount = async () => {
   showDeleteModal.value = true
@@ -178,32 +164,21 @@ const confirmUnlinkAccount = async () => {
 
     <Menu header="views.settings.appearance">
       <MenuDropdown>
-        <MenuButton
-          tabindex="0"
-          role="button"
-          :text="$t('views.settings.appearance')"
-          icon="ri-moon-clear-line"
-        >
+        <MenuButton tabindex="0" role="button" :text="$t('views.settings.theme')" icon="ri-moon-clear-line">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-accent uppercase font-semibold">
-              {{ themes.find((theme) => theme.id === currentTheme)?.label }}
+            <span class="text-sm text-accent font-semibold">
+              {{$t(themes.find((theme) => theme.id === currentTheme)?.labelKey as string)}}
             </span>
           </div>
         </MenuButton>
         <MenuContent>
           <li class="flex flex-col gap-1">
-            <button
-              v-for="theme in themes"
-              :key="theme.id"
-              @click="setTheme(theme.id)"
-              class="flex justify-between items-center py-2 px-4 rounded-lg"
-              :class="
-                currentTheme === theme.id ? 'bg-accent text-accent-content' : 'hover:bg-base-200'
-              "
-            >
+            <button v-for="theme in themes" :key="theme.id" @click="setTheme(theme.id)"
+              class="flex justify-between items-center py-2 px-4 rounded-lg" :class="currentTheme === theme.id ? 'bg-accent text-accent-content' : 'hover:bg-base-200'
+                ">
               <div class="flex items-center gap-2">
                 <i :class="theme.icon" />
-                <span class="font-medium">{{ theme.label }}</span>
+                <span class="font-medium">{{ $t(theme.labelKey) }}</span>
               </div>
 
               <i v-if="currentTheme === theme.id" class="ri-check-line" />
@@ -213,31 +188,20 @@ const confirmUnlinkAccount = async () => {
       </MenuDropdown>
 
       <MenuDropdown>
-        <MenuButton
-          tabindex="0"
-          role="button"
-          :text="$t('views.settings.language')"
-          icon="ri-translate"
-        >
+        <MenuButton tabindex="0" role="button" :text="$t('views.settings.language')" icon="ri-translate">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-accent uppercase font-semibold">
-              {{ langs.find((lang) => lang.id === currentLocale)?.label }}
+            <span class="text-sm text-accent font-semibold">
+              {{$t(langs.find((lang) => lang.id === currentLocale)?.label ?? '')}}
             </span>
           </div>
         </MenuButton>
 
         <MenuContent>
           <li class="flex flex-col gap-1">
-            <button
-              v-for="lang in langs"
-              :key="lang.id"
-              @click="setLocale(lang.id)"
-              class="flex justify-between items-center py-2 px-4 rounded-lg"
-              :class="
-                lang.id === currentLocale ? 'bg-accent text-accent-content' : 'hover:bg-base-200'
-              "
-            >
-              <span class="font-medium">{{ lang.label }}</span>
+            <button v-for="lang in langs" :key="lang.id" @click="setLocale(lang.id)"
+              class="flex justify-between items-center py-2 px-4 rounded-lg" :class="lang.id === currentLocale ? 'bg-accent text-accent-content' : 'hover:bg-base-200'
+                ">
+              <span class="font-medium">{{ t(lang.label) }}</span>
               <i v-if="lang.id === currentLocale" class="ri-check-line" />
             </button>
           </li>
@@ -246,16 +210,10 @@ const confirmUnlinkAccount = async () => {
     </Menu>
 
     <Menu header="views.settings.main" v-if="authStatus">
-      <MenuButton
-        :text="$t('views.settings.devices')"
-        icon="ri-smartphone-line"
-        @click="$router.push('/menu/settings/devices')"
-      />
-      <MenuButton
-        :text="$t('views.settings.api_keys')"
-        icon="ri-key-2-line"
-        @click="$router.push('/menu/settings/apikey')"
-      />
+      <MenuButton :text="$t('views.settings.devices')" icon="ri-smartphone-line"
+        @click="$router.push('/menu/settings/devices')" />
+      <MenuButton :text="$t('views.settings.api_keys')" icon="ri-key-2-line"
+        @click="$router.push('/menu/settings/apikey')" />
     </Menu>
 
     <Menu header="views.account.linked_accounts" v-if="authStatus">
@@ -276,21 +234,12 @@ const confirmUnlinkAccount = async () => {
               </div>
             </div>
 
-            <button
-              v-if="linkedAccounts.telegram"
-              class="btn btn-sm btn-outline btn-error"
-              :disabled="isLinking"
-              @click="unlinkAccount('telegram')"
-            >
+            <button v-if="linkedAccounts.telegram" class="btn btn-sm btn-outline btn-error" :disabled="isLinking"
+              @click="unlinkAccount('telegram')">
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
               <span v-else>{{ $t('actions.unlink') }}</span>
             </button>
-            <button
-              v-else
-              class="btn btn-sm btn-primary"
-              :disabled="isLinking"
-              @click="linkTelegram"
-            >
+            <button v-else class="btn btn-sm btn-primary" :disabled="isLinking" @click="linkTelegram">
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
               <span v-else>{{ $t('actions.link') }}</span>
             </button>
@@ -314,12 +263,8 @@ const confirmUnlinkAccount = async () => {
               </div>
             </div>
 
-            <button
-              v-if="linkedAccounts.yandex"
-              class="btn btn-sm btn-outline btn-error"
-              :disabled="isLinking"
-              @click="unlinkAccount('yandex')"
-            >
+            <button v-if="linkedAccounts.yandex" class="btn btn-sm btn-outline btn-error" :disabled="isLinking"
+              @click="unlinkAccount('yandex')">
               <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
               <span v-else>{{ $t('actions.unlink') }}</span>
             </button>
@@ -333,24 +278,12 @@ const confirmUnlinkAccount = async () => {
     </Menu>
 
     <Menu header="views.settings.danger" v-if="authStatus">
-      <MenuButton
-        @click="$router.push('/recovery')"
-        icon="ri-shield-keyhole-line"
-        :text="$t('views.settings.account_recovery')"
-      />
-      <MenuButton
-        @click="deleteAccount"
-        icon="ri-delete-bin-line"
-        :text="$t('actions.delete_account')"
-      >
+      <MenuButton @click="$router.push('/recovery')" icon="ri-shield-keyhole-line"
+        :text="$t('views.settings.account_recovery')" />
+      <MenuButton @click="deleteAccount" icon="ri-delete-bin-line" :text="$t('actions.delete_account')">
         <span v-if="isDeleting" class="loading loading-spinner loading-sm"></span>
       </MenuButton>
-      <MenuButton
-        v-if="!isTgEnv"
-        @click="logout"
-        text="views.settings.logout"
-        icon="ri-logout-box-line"
-      >
+      <MenuButton v-if="!isTgEnv" @click="logout" text="views.settings.logout" icon="ri-logout-box-line">
         <i class="ri-arrow-right-s-line text-xl opacity-50"></i>
       </MenuButton>
     </Menu>
@@ -362,47 +295,22 @@ const confirmUnlinkAccount = async () => {
       <p class="text-xs font-mono">{{ buildHash }} &middot; {{ buildDate }}</p>
     </div>
 
-    <ConfirmationModal
-      :is-open="showDeleteModal"
-      title="views.settings.delete_confirm_title"
-      message="views.settings.delete_confirm_message"
-      confirm-text="actions.delete_account"
-      confirm-button-class="btn-error"
-      :is-loading="isDeleting"
-      @confirm="confirmDeleteAccount"
-      @cancel="showDeleteModal = false"
-    />
+    <ConfirmationModal :is-open="showDeleteModal" title="views.settings.delete_confirm_title"
+      message="views.settings.delete_confirm_message" confirm-text="actions.delete_account"
+      confirm-button-class="btn-error" :is-loading="isDeleting" @confirm="confirmDeleteAccount"
+      @cancel="showDeleteModal = false" />
 
-    <ConfirmationModal
-      v-if="unlinkProvider"
-      :is-open="showUnlinkModal"
-      :title="`views.settings.unlink_confirm_title`"
-      :message="`views.settings.unlink_confirm_message`"
-      :confirm-text="`actions.unlink`"
-      confirm-button-class="btn-warning"
-      :is-loading="isLinking"
-      @confirm="confirmUnlinkAccount"
-      @cancel="showUnlinkModal = false"
-    />
+    <ConfirmationModal v-if="unlinkProvider" :is-open="showUnlinkModal" :title="`views.settings.unlink_confirm_title`"
+      :message="`views.settings.unlink_confirm_message`" :confirm-text="`actions.unlink`"
+      confirm-button-class="btn-warning" :is-loading="isLinking" @confirm="confirmUnlinkAccount"
+      @cancel="showUnlinkModal = false" />
 
-    <ConfirmationModal
-      :is-open="showLinkTelegramModal"
-      title="actions.link_telegram_title"
-      message="actions.link_telegram_message"
-      confirm-text="common.confirm"
-      confirm-button-class="btn-primary"
-      @confirm="confirmLinkTelegram"
-      @cancel="showLinkTelegramModal = false"
-    />
+    <ConfirmationModal :is-open="showLinkTelegramModal" title="actions.link_telegram_title"
+      message="actions.link_telegram_message" confirm-text="common.confirm" confirm-button-class="btn-primary"
+      @confirm="confirmLinkTelegram" @cancel="showLinkTelegramModal = false" />
 
-    <ConfirmationModal
-      :is-open="showLinkYandexModal"
-      title="actions.link_yandex_title"
-      message="actions.link_yandex_message"
-      confirm-text="common.confirm"
-      confirm-button-class="btn-primary"
-      @confirm="confirmLinkYandex"
-      @cancel="showLinkYandexModal = false"
-    />
+    <ConfirmationModal :is-open="showLinkYandexModal" title="actions.link_yandex_title"
+      message="actions.link_yandex_message" confirm-text="common.confirm" confirm-button-class="btn-primary"
+      @confirm="confirmLinkYandex" @cancel="showLinkYandexModal = false" />
   </div>
 </template>

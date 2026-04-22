@@ -68,13 +68,15 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v1/ping" ]
+      test: [ "CMD-SHELL", "test -f /tmp/app_ready" ]
       interval: 20s
       timeout: 3s
-      retries: 3
-      start_period: 15s
+      retries: 9999
+      start_period: 20s
     networks:
       - app_network
+    volumes:
+      - ./backend/data/locales:/app/data/locales
 
   bot:
     build:

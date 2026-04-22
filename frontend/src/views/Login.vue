@@ -2,13 +2,13 @@
 import { apiClient } from '@/utils/api/api'
 import { AuthService } from '@/utils/api/auth.api'
 import { AccountService } from '@/utils/api/account.api'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 import QrCode from '@/components/QrCode.vue'
 import { isTgEnv, showRecoveryCodeModal } from '@/main'
 import { onMounted, ref, type Ref, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { WebApp } from '@/utils/telegram.ts'
-import { buildYandexOAuthUrl } from '@/utils/oauth/yandex'
+import { WebApp } from '@/utils/providers/telegram'
+import { buildYandexOAuthUrl } from '@/utils/providers/yandex'
 import { finalizeAuthAndRedirect, syncSessionThenNavigate } from '@/utils/auth'
 import yandexIcon from '@/assets/ya.svg'
 
@@ -228,11 +228,8 @@ onBeforeUnmount(() => stopQR())
         </div>
         <div v-if="!qrUrl" class="card w-50 h-50 bg-base-200/30">
           <div class="card-body flex flex-col items-center justify-center h-full text-center">
-            <button
-              v-if="qrStarted"
-              class="btn btn-small btn-accent btn-soft flex flex-row items-center gap-1"
-              @click="startLogin()"
-            >
+            <button v-if="qrStarted" class="btn btn-small btn-accent btn-soft flex flex-row items-center gap-1"
+              @click="startLogin()">
               <i class="ri-reset-right-line text-base"></i>
               <span class="text-base">{{ $t('views.auth.try_again') }}</span>
             </button>
@@ -247,16 +244,11 @@ onBeforeUnmount(() => stopQR())
         <div v-if="loginCode" class="flex flex-col items-center gap-1">
           <p class="text-xs opacity-50">{{ $t('views.auth.code_hint') }}</p>
           <code
-            class="text-lg font-mono font-bold tracking-widest select-all bg-base-200 px-4 py-1.5 rounded-lg lowercase"
-            >{{ loginCode.toLowerCase() }}</code
-          >
+            class="text-lg font-mono font-bold tracking-widest select-all bg-base-200 px-4 py-1.5 rounded-lg lowercase">{{ loginCode.toLowerCase() }}</code>
         </div>
 
         <div class="flex flex-row gap-3">
-          <button
-            class="btn btn-sm btn-square"
-            @click="openLink('https://github.com/sht0rmx/tgminiapptemplate')"
-          >
+          <button class="btn btn-sm btn-square mr-3" @click="openLink('https://github.com/sht0rmx/tgminiapptemplate')">
             <i class="ri-github-line text-xl" />
           </button>
 
@@ -271,9 +263,8 @@ onBeforeUnmount(() => stopQR())
     </div>
     <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
       <button class="btn btn-ghost btn-sm" @click="$router.push('/')">
-        <span class="uppercase tracking-widest">{{ $t('views.auth.skip_login') }}</span>
+        <span class="tracking-widest">{{ $t('views.auth.skip_login') }}</span>
       </button>
     </footer>
   </div>
 </template>
-

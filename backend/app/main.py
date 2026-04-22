@@ -1,5 +1,7 @@
 import logging
 import os
+
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -21,6 +23,7 @@ from app.services.telegram import telegram_service
 
 load_dotenv()
 
+READY_FILE = Path("/tmp/app_ready")
 REQUIRED_ENV_VARS = [
     "JWT_SECRET",
     "BOT_TOKEN",
@@ -31,7 +34,7 @@ REQUIRED_ENV_VARS = [
     "DATABASE_URL",
 ]
 
-
+    
 def validate_env():
     missing = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
     if missing:
@@ -78,15 +81,16 @@ async def lifespan(_: FastAPI):
     await db_client.create_db()
     await db_client.seed_admin_key()
     await db_client.clear_db()
-
+    run_translations()
     scheduler.add_job(db_client.clear_db, IntervalTrigger(hours=1))
-    scheduler.add_job(run_translations, IntervalTrigger(days=1))
+    scheduler.add_job(run_translations, IntervalTrigger(hours=1))
+    READY_FILE.write_text("ok")
 
     yield
 
     await telegram_service.close()
     await redis_client.close()
-
+    READY_FILE.unlink(missing_ok=True)
     scheduler.shutdown(wait=False)
 
 app = FastAPI(

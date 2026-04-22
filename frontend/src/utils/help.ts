@@ -1,4 +1,4 @@
-import { showPush } from "@/components/alert"
+import { showPush } from "@/utils/alert"
 
 const getErrorMessage = (err: unknown): string => {
   if (typeof err === 'string') return err
@@ -14,7 +14,10 @@ export const handleError = (err: unknown, type: string) => {
   const errorMessage = getErrorMessage(err)
   console.error(`[${type}]`, err)
   showPush('app.error', { error: errorMessage }, 'alert-warning', 'ri-error-warning-line')
-  setTimeout(() => {
-    window.location.reload()
-  }, 2000)
+  if (type === 'Unhandled Promise Rejection') {
+    console.error('Unhandled Promise Rejection:', err)
+    setTimeout(() => {
+      window.location.reload()
+    }, 2000)
+  }
 }

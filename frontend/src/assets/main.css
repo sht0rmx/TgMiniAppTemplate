@@ -1,9 +1,45 @@
 @import 'tailwindcss';
 @plugin "daisyui" {
   themes:
-    winter --default,
+    nord --default,
     dim --prefersdark;
 }
+
+
+@plugin "daisyui/theme" {
+  name: 'simple';
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: oklch(96% 0.01 280);
+  --color-base-200: oklch(93% 0.015 280);
+  --color-base-300: oklch(89% 0.02 280);
+  --color-base-content: oklch(22% 0.03 270);
+  --color-primary: oklch(55% 0.22 260);
+  --color-primary-content: oklch(98% 0.01 260);
+  --color-secondary: oklch(60% 0.18 255);
+  --color-secondary-content: oklch(98% 0.01 255);
+  --color-accent: oklch(68% 0.16 250);
+  --color-accent-content: oklch(20% 0.03 250);
+  --color-neutral: oklch(40% 0.03 270);
+  --color-neutral-content: oklch(96% 0.01 270);
+  --color-info: oklch(70% 0.15 250);
+  --color-info-content: oklch(20% 0.03 250);
+  --color-success: oklch(65% 0.18 150);
+  --color-success-content: oklch(20% 0.03 150);
+  --color-warning: oklch(75% 0.18 85);
+  --color-warning-content: oklch(25% 0.04 85);
+  --color-error: oklch(65% 0.22 25);
+  --color-error-content: oklch(20% 0.03 25);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 0.5px;
+  --depth: 0;
+  --noise: 0;
+}
+
 
 .slide-up-enter-active,
 .slide-up-leave-active {

@@ -17,11 +17,11 @@ import {
   authStatus,
 } from '@/main.ts'
 import Drawer from '@/components/drawer/Drawer.vue'
-import { showPush } from '@/components/alert/index.ts'
+import { showPush } from '@/utils/alert'
 import Alert from '@/components/alert/Alert.vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { getTelegramStartAppAction, WebApp } from '@/utils/telegram.ts'
+import { getTelegramStartAppAction, WebApp } from '@/utils/providers/telegram'
 import { AccountService } from '@/utils/api/account.api'
 import { AuthService } from '@/utils/api/auth.api.ts'
 import ConfirmLink from './components/ConfirmLink.vue'
@@ -54,7 +54,7 @@ if (technicalWork) {
 }
 
 const confirmTitle = computed(() => {
-  if (!pendingLink.value) { return t('views.auth.link_confirm_title')}
+  if (!pendingLink.value) { return t('views.auth.link_confirm_title') }
 
   switch (pendingLink.value.method) {
     case 'telegram':
@@ -67,7 +67,7 @@ const confirmTitle = computed(() => {
 })
 
 const confirmHint = computed(() => {
-  if (!pendingLink.value) { return t('views.auth.link_confirm_hint')}
+  if (!pendingLink.value) { return t('views.auth.link_confirm_hint') }
 
   switch (pendingLink.value.method) {
     case 'telegram':
@@ -132,7 +132,7 @@ const handleLinkDecline = () => {
 }
 
 onMounted(() => {
-  if (!WebApp) { return}
+  if (!WebApp) { return }
 
   const action = getTelegramStartAppAction()
   if (!action) { return }
@@ -155,7 +155,7 @@ watch(() => route.meta.titleKey, (key) => {
   } else {
     document.title = appName
   }
-},{ immediate: true })
+}, { immediate: true })
 
 watch(unableAccessApi, () => {
   if (!technicalWork && unableAccessApi.value) {
@@ -169,7 +169,7 @@ watch(unableAccessApi, () => {
   <Drawer>
     <SplashScreen v-show="isLoading" />
 
-    <div v-show="!isLoading" :class="containerClasses" class="app-container lg:pb-0 min-h-screen">
+    <div v-show="!isLoading" :class="containerClasses" class="app-container md:pb-0 min-h-screen">
       <main :class="mainClasses">
         <div class="w-full">
           <router-view />
@@ -180,28 +180,13 @@ watch(unableAccessApi, () => {
     </div>
 
     <AuthModal v-if="!isLoading" />
-    <RecoveryCodeModal
-      :code="recoveryCode"
-      :is-open="showRecoveryModal"
-      @close="showRecoveryModal = false"
-    />
-    <ConfirmationModal
-      :is-open="showLinkErrorDialog"
-      title="views.auth.ya.error"
-      :message="linkErrorMessage"
-      confirm-text="common.close"
-      confirm-button-class="btn-primary"
-      @confirm="showLinkErrorDialog = false"
-      @cancel="showLinkErrorDialog = false"
-    />
+    <RecoveryCodeModal :code="recoveryCode" :is-open="showRecoveryModal" @close="showRecoveryModal = false" />
+    <ConfirmationModal :is-open="showLinkErrorDialog" title="views.auth.ya.error" :message="linkErrorMessage"
+      confirm-text="common.close" confirm-button-class="btn-primary" @confirm="showLinkErrorDialog = false"
+      @cancel="showLinkErrorDialog = false" />
 
-    <ConfirmLink
-      :confirmTitle="confirmTitle"
-      :confirmHint="confirmHint"
-      :showLinkConfirmDrawer="showLinkConfirmDrawer"
-      :handleLinkAccept="handleLinkAccept"
-      :handleLinkDecline="handleLinkDecline"
-    />
+    <ConfirmLink :confirmTitle="confirmTitle" :confirmHint="confirmHint" :showLinkConfirmDrawer="showLinkConfirmDrawer"
+      :handleLinkAccept="handleLinkAccept" :handleLinkDecline="handleLinkDecline" />
     <Alert />
   </Drawer>
 </template>

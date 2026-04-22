@@ -3,7 +3,7 @@ import { isTgEnv, unableAccessApi } from '@/main.ts'
 import { apiClient } from '@/utils/api/api.ts'
 import { AuthService } from '@/utils/api/auth.api.ts'
 import router from '@/utils/router.ts'
-import { showPush } from '@/components/alert'
+import { showPush } from '@/utils/alert'
 import { showRecoveryCodeModal } from '@/main'
 import type { Router } from 'vue-router'
 

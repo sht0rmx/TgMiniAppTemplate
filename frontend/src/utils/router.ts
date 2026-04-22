@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { type RouteRecordRaw } from 'vue-router'
 
-import { WebApp } from '@/utils/telegram'
+import { WebApp } from '@/utils/providers/telegram'
 import HomeView from '@/views/Home.vue'
 import LoginView from '@/views/Login.vue'
 

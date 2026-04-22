@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { hiddenNav, isLoading } from '@/main'
-import { alerts } from './index'
+import { alerts } from '../../utils/alert'
 </script>
 
 <template>
