@@ -15,14 +15,6 @@ export async function authInit(): Promise<boolean> {
   }
 
   let ac = apiClient.getAccessToken()
-  if (!ac) {
-    try {
-      const refreshed = await apiClient.refreshTokens()
-      if (refreshed) {
-        ac = apiClient.getAccessToken()
-      }
-    } catch {}
-  }
 
   if (ac) {
     return await AuthService.check()
@@ -44,7 +36,6 @@ export async function authInit(): Promise<boolean> {
   return false
 }
 
-/** Синхронизация профиля с бэкендом и переход (без модалки recovery). */
 export async function syncSessionThenNavigate(
   router: Router,
   redirectPath: string,
@@ -56,9 +47,6 @@ export async function syncSessionThenNavigate(
   return ok
 }
 
-/**
- * После получения access_token (cookie): опционально модалка recovery, затем check и переход.
- */
 export async function finalizeAuthAndRedirect(
   router: Router,
   redirectPath: string,

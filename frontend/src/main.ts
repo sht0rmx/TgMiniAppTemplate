@@ -5,7 +5,7 @@ import { createPinia } from 'pinia'
 
 import App from '@/App.vue'
 import router from '@/utils/router.ts'
-import { i18n, initializeLocale, fetchAvailableLocales } from '@/utils/managers/langs'
+import { i18n, initializeLocale } from '@/utils/managers/langs'
 import { setTheme } from '@/utils/managers/themes'
 import { authInit } from '@/utils/auth.ts'
 import { checkTg } from '@/utils/providers/telegram'
@@ -45,10 +45,9 @@ export const nav_items = [
 ]
 
 const initApp = async () => {
-  await initializeLocale()
-  await fetchAvailableLocales()
-  checkTg()
   authStatus.value = await authInit()
+  await initializeLocale()
+  checkTg()
 }
 
 const app = createApp(App)

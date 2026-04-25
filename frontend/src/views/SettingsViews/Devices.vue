@@ -249,7 +249,7 @@ onUnmounted(() => stopScanner())
                 </div>
                 <span class="badge badge-success badge-sm">{{
                   $t('views.devices.current_badge')
-                  }}</span>
+                }}</span>
               </div>
             </template>
           </MenuButton>
@@ -301,7 +301,7 @@ onUnmounted(() => stopScanner())
               </div>
               <span v-if="selectedSession?.isCurrent" class="badge badge-success badge-sm ml-auto">{{
                 $t('views.devices.current_badge')
-              }}</span>
+                }}</span>
             </div>
 
             <div class="grid grid-cols-1 gap-2 w-full mb-4">
@@ -313,13 +313,13 @@ onUnmounted(() => stopScanner())
                 <span class="text-xs opacity-60">{{ $t('views.devices.dropdown.last_seen') }}</span>
                 <span class="text-xs font-medium">{{
                   selectedSession ? formatDate(selectedSession.lastUsed) : ''
-                }}</span>
+                  }}</span>
               </div>
               <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
                 <span class="text-xs opacity-60">{{ $t('views.devices.dropdown.created') }}</span>
                 <span class="text-xs font-medium">{{
                   selectedSession ? formatDate(selectedSession.createdAt) : ''
-                }}</span>
+                  }}</span>
               </div>
             </div>
 
@@ -383,38 +383,36 @@ onUnmounted(() => stopScanner())
     </Teleport>
 
     <input type="checkbox" class="modal-toggle" v-model="showScanner" />
-    <Teleport to="body">
-      <div class="modal">
-        <div class="modal-box max-w-md flex flex-col items-center">
-          <h3 class="font-bold text-lg w-full text-left mb-4">{{ $t('views.devices.scan.title') }}</h3>
+    <div class="modal">
+      <div class="modal-box max-w-md flex flex-col items-center">
+        <h3 class="font-bold text-lg w-full text-left mb-4">{{ $t('views.devices.scan.title') }}</h3>
 
-          <div class="relative w-full max-w-300px aspect-square p-2 flex items-center justify-center my-2">
-            <div
-              class="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-2xl opacity-80 pointer-events-none z-10">
-            </div>
-            <div
-              class="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-2xl opacity-80 pointer-events-none z-10">
-            </div>
-            <div
-              class="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-2xl opacity-80 pointer-events-none z-10">
-            </div>
-            <div
-              class="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-2xl opacity-80 pointer-events-none z-10">
-            </div>
-
-            <div id="scanner"
-              class="w-full h-full bg-base-300 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
-            </div>
+        <div class="relative w-full max-w-300px aspect-square p-2 flex items-center justify-center my-2">
+          <div
+            class="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-2xl opacity-80 pointer-events-none z-10">
+          </div>
+          <div
+            class="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-2xl opacity-80 pointer-events-none z-10">
+          </div>
+          <div
+            class="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-2xl opacity-80 pointer-events-none z-10">
+          </div>
+          <div
+            class="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-2xl opacity-80 pointer-events-none z-10">
           </div>
 
-          <div class="modal-action w-full mt-6">
-            <button class="btn w-full" @click="stopScanner">
-              {{ $t('views.devices.scan.close') }}
-            </button>
+          <div id="scanner"
+            class="w-full h-full bg-base-300 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
           </div>
         </div>
+
+        <div class="modal-action w-full mt-6">
+          <button class="btn w-full" @click="stopScanner">
+            {{ $t('views.devices.scan.close') }}
+          </button>
+        </div>
       </div>
-    </Teleport>
+    </div>
 
     <Teleport to="body">
       <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': showQrConfirm }">

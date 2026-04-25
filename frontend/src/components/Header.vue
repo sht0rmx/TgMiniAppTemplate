@@ -42,7 +42,7 @@ defineProps({
 }
 
 .spacer {
-  height: calc(var(--tg-safe-area-inset-top, 0px));
+  height: calc(var(--tg-safe-area-inset-top, 0px) + 0.1rem);
 }
 </style>
 
