@@ -268,11 +268,8 @@ onMounted(() => loadFiles())
 
     <!-- Upload button -->
     <input ref="fileInput" type="file" class="hidden" @change="onFileSelected" />
-    <button
-      class="btn btn-soft btn-accent w-full py-6 flex items-center justify-center gap-2"
-      :disabled="isUploading"
-      @click="triggerUpload"
-    >
+    <button class="btn btn-soft btn-accent w-full py-6 flex items-center justify-center gap-2" :disabled="isUploading"
+      @click="triggerUpload">
       <span v-if="isUploading" class="loading loading-spinner loading-sm"></span>
       <i v-else class="ri-upload-2-line text-xl"></i>
       <span class="font-semibold">{{ $t('views.files.upload') }}</span>
@@ -295,13 +292,8 @@ onMounted(() => loadFiles())
         </div>
 
         <Menu v-else>
-          <MenuButton
-            v-for="f in sortedFiles"
-            :key="f.id"
-            :text="formatName(f.name)"
-            :icon="getFileIcon(f.name)"
-            @click="openDrawer(f)"
-          >
+          <MenuButton v-for="f in sortedFiles" :key="f.id" :text="formatName(f.name)" :icon="getFileIcon(f.name)"
+            @click="openDrawer(f)">
             <template #content>
               <div class="w-full flex items-center gap-3">
                 <i :class="getFileIcon(f.name)" class="text-2xl text-accent shrink-0"></i>
@@ -317,159 +309,112 @@ onMounted(() => loadFiles())
       </div>
     </template>
 
-    <!-- File detail drawer -->
-    <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': drawerOpen }">
-      <div
-        class="modal-box p-0 bg-base-100 rounded-t-3xl sm:rounded-3xl border-t sm:border-t-0 border-base-300"
-      >
-        <div class="px-5 pt-5 pb-4 flex flex-col items-center text-center">
-          <div class="flex items-center gap-3 w-full mb-3">
-            <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-accent/10 text-accent"
-            >
-              <i
-                :class="selectedFile ? getFileIcon(selectedFile.name) : 'ri-file-line'"
-                class="text-2xl"
-              ></i>
-            </div>
-            <div class="text-left flex-1 min-w-0">
-              <div v-if="!isRenaming" class="flex items-center gap-2">
-                <h3 class="text-lg font-bold leading-tight truncate">
-                  {{ selectedFile ? formatName(selectedFile.name) : '' }}
-                </h3>
-                <button
-                  class="btn btn-ghost btn-xs btn-circle"
-                  @click="isRenaming = true"
-                  :disabled="isPreviewLoading"
-                >
-                  <i class="ri-edit-line text-sm"></i>
-                </button>
+    <Teleport to="body">
+      <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': drawerOpen }">
+        <div class="modal-box p-0 bg-base-100 rounded-t-3xl sm:rounded-3xl border-t sm:border-t-0 border-base-300">
+          <div class="px-5 pt-5 pb-4 flex flex-col items-center text-center">
+            <div class="flex items-center gap-3 w-full mb-3">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-accent/10 text-accent">
+                <i :class="selectedFile ? getFileIcon(selectedFile.name) : 'ri-file-line'" class="text-2xl"></i>
               </div>
-              <div v-else class="space-y-2">
-                <input
-                  v-model="renameInput"
-                  type="text"
-                  class="input input-sm input-bordered w-full"
-                  @keydown.enter="submitRename"
-                  @keydown.escape="cancelRename"
-                  autofocus
-                />
-                <div class="flex gap-2 justify-end">
-                  <button class="btn btn-sm btn-ghost" @click="cancelRename">
-                    {{ $t('views.files.cancel') }}
-                  </button>
-                  <button class="btn btn-sm btn-primary" @click="submitRename">
-                    {{ $t('views.files.save') }}
+              <div class="text-left flex-1 min-w-0">
+                <div v-if="!isRenaming" class="flex items-center gap-2">
+                  <h3 class="text-lg font-bold leading-tight truncate">
+                    {{ selectedFile ? formatName(selectedFile.name) : '' }}
+                  </h3>
+                  <button class="btn btn-ghost btn-xs btn-circle" @click="isRenaming = true"
+                    :disabled="isPreviewLoading">
+                    <i class="ri-edit-line text-sm"></i>
                   </button>
                 </div>
+                <div v-else class="space-y-2">
+                  <input v-model="renameInput" type="text" class="input input-sm input-bordered w-full"
+                    @keydown.enter="submitRename" @keydown.escape="cancelRename" autofocus />
+                  <div class="flex gap-2 justify-end">
+                    <button class="btn btn-sm btn-ghost" @click="cancelRename">
+                      {{ $t('views.files.cancel') }}
+                    </button>
+                    <button class="btn btn-sm btn-primary" @click="submitRename">
+                      {{ $t('views.files.save') }}
+                    </button>
+                  </div>
+                </div>
+                <p class="text-xs opacity-50 font-mono truncate">
+                  .{{ selectedFile ? getExt(selectedFile.name) : '' }}
+                </p>
               </div>
-              <p class="text-xs opacity-50 font-mono truncate">
-                .{{ selectedFile ? getExt(selectedFile.name) : '' }}
-              </p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full mb-4">
+              <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
+                <span class="text-xs opacity-60">{{ $t('views.files.detail.uploaded') }}</span>
+                <span class="text-xs font-medium">
+                  {{ selectedFile ? formatDate(selectedFile.uploadedAt) : '' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 w-full">
+              <button class="btn btn-primary rounded-xl" :disabled="isPreviewLoading" @click="previewFile">
+                <span v-if="isPreviewLoading" class="loading loading-spinner loading-xs"></span>
+                <i v-else class="ri-eye-line"></i>
+                <span class="hidden md:flex">{{ $t('views.files.detail.preview') }}</span>
+              </button>
+              <button class="btn btn-accent rounded-xl" @click="downloadFile">
+                <i class="ri-download-line"></i>
+                <span class="hidden md:flex">{{ $t('views.files.detail.download') }}</span>
+              </button>
+              <button class="btn btn-error rounded-xl" @click="deleteFile">
+                <i class="ri-delete-bin-line"></i>
+                <span class="hidden md:flex">{{ $t('views.files.detail.delete') }}</span>
+              </button>
             </div>
           </div>
+        </div>
+        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeDrawer">
+          <button>close</button>
+        </form>
+      </div>
+    </Teleport>
 
-          <div class="grid grid-cols-1 gap-2 w-full mb-4">
-            <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
-              <span class="text-xs opacity-60">{{ $t('views.files.detail.uploaded') }}</span>
-              <span class="text-xs font-medium">
-                {{ selectedFile ? formatDate(selectedFile.uploadedAt) : '' }}
-              </span>
+    <Teleport to="body">
+      <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': previewOpen }">
+        <div class="modal-box max-w-2xl max-h-[85vh] bg-base-100 rounded-t-3xl sm:rounded-3xl p-0">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+            <h3 class="font-semibold text-sm truncate">{{ $t('views.files.detail.preview') }}</h3>
+            <button class="btn btn-ghost btn-sm btn-circle" @click="closePreview">
+              <i class="ri-close-line text-lg"></i>
+            </button>
+          </div>
+
+          <div class="p-4 overflow-auto max-h-[calc(85vh-4rem)] flex items-center justify-center">
+            <img v-if="previewType === 'image'" :src="previewUrl" alt="preview"
+              class="max-w-full max-h-[70vh] rounded-lg object-contain" />
+
+            <video v-else-if="previewType === 'video'" :src="previewUrl" controls
+              class="max-w-full max-h-[70vh] rounded-lg"></video>
+
+            <div v-else-if="previewType === 'audio'" class="w-full max-w-md px-4">
+              <AudioPlayer :src="previewUrl" :title="selectedFile?.name || 'Audio'" />
+            </div>
+
+            <iframe v-else-if="previewType === 'pdf'" :src="previewUrl"
+              class="w-full h-[70vh] rounded-lg border-0"></iframe>
+
+            <pre v-else-if="previewType === 'text'"
+              class="w-full text-sm bg-base-200 p-4 rounded-xl overflow-auto max-h-[70vh] whitespace-pre-wrap font-mono">{{
+                previewText }}</pre>
+
+            <div v-else class="text-center py-12 opacity-50">
+              <i class="ri-file-unknow-line text-5xl mb-3 block"></i>
+              <p class="text-sm">{{ $t('views.files.preview_unsupported') }}</p>
             </div>
           </div>
-
-          <div class="grid grid-cols-3 gap-2 w-full">
-            <button
-              class="btn btn-primary rounded-xl"
-              :disabled="isPreviewLoading"
-              @click="previewFile"
-            >
-              <span v-if="isPreviewLoading" class="loading loading-spinner loading-xs"></span>
-              <i v-else class="ri-eye-line"></i>
-              {{ $t('views.files.detail.preview') }}
-            </button>
-            <button class="btn btn-accent rounded-xl" @click="downloadFile">
-              <i class="ri-download-line"></i>
-              {{ $t('views.files.detail.download') }}
-            </button>
-            <button class="btn btn-error rounded-xl" @click="deleteFile">
-              <i class="ri-delete-bin-line"></i>
-              {{ $t('views.files.detail.delete') }}
-            </button>
-          </div>
         </div>
+        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closePreview">
+          <button>close</button>
+        </form>
       </div>
-      <form
-        method="dialog"
-        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
-        @click="closeDrawer"
-      >
-        <button>close</button>
-      </form>
-    </div>
-
-    <!-- Preview modal -->
-    <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': previewOpen }">
-      <div class="modal-box max-w-2xl max-h-[85vh] bg-base-100 rounded-t-3xl sm:rounded-3xl p-0">
-        <!-- Preview header -->
-        <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
-          <h3 class="font-semibold text-sm truncate">{{ $t('views.files.detail.preview') }}</h3>
-          <button class="btn btn-ghost btn-sm btn-circle" @click="closePreview">
-            <i class="ri-close-line text-lg"></i>
-          </button>
-        </div>
-
-        <!-- Preview content -->
-        <div class="p-4 overflow-auto max-h-[calc(85vh-4rem)] flex items-center justify-center">
-          <!-- Image -->
-          <img
-            v-if="previewType === 'image'"
-            :src="previewUrl"
-            alt="preview"
-            class="max-w-full max-h-[70vh] rounded-lg object-contain"
-          />
-
-          <!-- Video -->
-          <video
-            v-else-if="previewType === 'video'"
-            :src="previewUrl"
-            controls
-            class="max-w-full max-h-[70vh] rounded-lg"
-          ></video>
-
-          <!-- Audio -->
-          <div v-else-if="previewType === 'audio'" class="w-full max-w-md px-4">
-            <AudioPlayer :src="previewUrl" :title="selectedFile?.name || 'Audio'" />
-          </div>
-
-          <!-- PDF -->
-          <iframe
-            v-else-if="previewType === 'pdf'"
-            :src="previewUrl"
-            class="w-full h-[70vh] rounded-lg border-0"
-          ></iframe>
-
-          <!-- Text -->
-          <pre
-            v-else-if="previewType === 'text'"
-            class="w-full text-sm bg-base-200 p-4 rounded-xl overflow-auto max-h-[70vh] whitespace-pre-wrap font-mono"
-            >{{ previewText }}</pre
-          >
-
-          <!-- Unknown -->
-          <div v-else class="text-center py-12 opacity-50">
-            <i class="ri-file-unknow-line text-5xl mb-3 block"></i>
-            <p class="text-sm">{{ $t('views.files.preview_unsupported') }}</p>
-          </div>
-        </div>
-      </div>
-      <form
-        method="dialog"
-        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
-        @click="closePreview"
-      >
-        <button>close</button>
-      </form>
-    </div>
+    </Teleport>
   </div>
 </template>

@@ -33,6 +33,10 @@ const routes: RouteRecordRaw[] = [
     redirect: (to) => ({ path: '/login', query: to.query }),
   },
   {
+    path: '/accept',
+    redirect: (to) => ({ path: '/menu/settings/devices', query: to.query }),
+  },
+  {
     path: '/recovery',
     name: 'Recovery',
     component: Recovery,

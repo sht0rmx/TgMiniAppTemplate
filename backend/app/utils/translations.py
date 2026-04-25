@@ -23,17 +23,16 @@ MAX_BATCH_CHARS = 2500
 MAX_RETRIES = 3
 SEPARATOR = "[#@#]"
 
-# Справочник названий языков (дополните нужными)
 LANGUAGE_NAMES = {
-    "en": "🇺🇸 English",
-    "ru": "🇷🇺 Русский",
-    "de": "🇩🇪 Deutsch",
-    "fr": "🇫🇷 Français",
-    "es": "🇪🇸 Español",
-    "it": "🇮🇹 Italiano",
-    "pt": "🇵🇹 Português",
-    "zh": "🇨🇳 中文",
-    "ja": "🇯🇵 日本語"
+    "en": "English",
+    "ru": "Русский",
+    "de": "Deutsch",
+    "fr": "Français",
+    "es": "Español",
+    "it": "Italiano",
+    "pt": "Português",
+    "zh": "中文",
+    "ja": "日本語"
 }
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -83,7 +82,6 @@ def restore_placeholders(text: str, placeholders: list[str]) -> str:
     """Возвращает оригинальные плейсхолдеры на место."""
     restored_text = text
     for i, p in enumerate(placeholders):
-        # Google Translate иногда может добавить пробел внутри [[ 0 ]]
         pattern = re.compile(rf"\[\[\s*{i}\s*\]\]")
         restored_text = pattern.sub(p, restored_text)
     return restored_text
@@ -92,7 +90,6 @@ def translate_batch(texts: list[str], source_lang: str, target_lang: str) -> lis
     if not texts:
         return []
 
-    # Защищаем плейсхолдеры во всех строках
     protected_data = [protect_placeholders(t) for t in texts]
     protected_texts = [p[0] for p in protected_data]
     all_placeholders = [p[1] for p in protected_data]
@@ -109,9 +106,6 @@ def translate_batch(texts: list[str], source_lang: str, target_lang: str) -> lis
         try:
             combined_text = SEPARATOR.join(protected_texts)
             translated = translator.translate(combined_text)
-            
-            # В некоторых случаях переводчик дублирует разделитель или меняет его
-            # Очищаем результат от возможных артефактов пробелов вокруг SEPARATOR
             result = [t.strip() for t in translated.split(SEPARATOR)]
             
             if len(result) != len(texts):
@@ -141,11 +135,9 @@ def sync_locale(target: str, lang_select_data: dict[str, str]) -> None:
     source_flat = flatten(load_json(source_file))
     current_flat = flatten(load_json(target_file))
 
-    # 1. Принудительно обновляем lang_select из нашего сгенерированного списка
     for lang_code, lang_name in lang_select_data.items():
         current_flat[f"lang_select.{lang_code}"] = lang_name
 
-    # 2. Определяем, что нужно перевести (исключая lang_select)
     keys_to_translate = [
         k for k in source_flat 
         if k not in current_flat and not k.startswith("lang_select.")
@@ -180,8 +172,6 @@ def sync_locale(target: str, lang_select_data: dict[str, str]) -> None:
             translated_res = translate_batch(batch_values, SOURCE_LOCALE, target)
             for bk, bv in zip(batch_keys, translated_res):
                 current_flat[bk] = bv
-
-    # 3. Удаляем ключи, которых больше нет в оригинале (кроме наших lang_select)
     stale_keys = [
         k for k in current_flat 
         if k not in source_flat and not k.startswith("lang_select.")
@@ -189,12 +179,10 @@ def sync_locale(target: str, lang_select_data: dict[str, str]) -> None:
     for k in stale_keys:
         del current_flat[k]
 
-    # Сохраняем результат
     save_json(target_file, unflatten(dict(sorted(current_flat.items()))))
     logger.info(f"[{target}] Sync complete.")
 
 def run() -> None:
-    # Генерируем lang_select на основе доступных языков (исходный + цели)
     all_langs = sorted(list(set([SOURCE_LOCALE] + TARGETS)))
     lang_select_data = {
         code: LANGUAGE_NAMES.get(code, code) for code in all_langs
@@ -202,7 +190,6 @@ def run() -> None:
 
     logger.info(f"Starting translation engine. Targets: {', '.join(TARGETS)}")
     
-    # Сначала обновим сам исходный файл, чтобы в нем тоже был актуальный lang_select
     source_file = LOCALES_DIR / f"{SOURCE_LOCALE}.json"
     if source_file.exists():
         data = load_json(source_file)

@@ -147,6 +147,7 @@ showPush(
   modals: {
     name: 'Modals',
     code: `<!-- Basic Modal -->
+    <Teleport to="body">
 <dialog id="my_modal" class="modal">
   <div class="modal-box">
     <h3 class="font-bold text-lg">Modal Title</h3>
@@ -161,6 +162,7 @@ showPush(
     </div>
   </div>
 </dialog>
+</Teleport>
 
 <!-- Open Modal -->
 <button
@@ -232,13 +234,8 @@ function copyCode(): void {
 
           <!-- Component Selector -->
           <div class="flex flex-wrap gap-2 mb-4">
-            <button
-              v-for="(comp, key) in components"
-              :key="key"
-              class="btn btn-sm"
-              :class="selectedComponent === key ? 'btn-primary' : 'btn-ghost'"
-              @click="selectedComponent = key"
-            >
+            <button v-for="(comp, key) in components" :key="key" class="btn btn-sm"
+              :class="selectedComponent === key ? 'btn-primary' : 'btn-ghost'" @click="selectedComponent = key">
               {{ comp.name }}
             </button>
           </div>
@@ -282,28 +279,20 @@ function copyCode(): void {
             <!-- Alert Preview -->
             <template v-if="selectedComponent === 'alert'">
               <div class="w-full space-y-3">
-                <button
-                  class="btn btn-success btn-sm"
-                  @click="showPush('views.components_demo.sample_success', '', 'alert-success', 'ri-check-line')"
-                >
+                <button class="btn btn-success btn-sm"
+                  @click="showPush('views.components_demo.sample_success', '', 'alert-success', 'ri-check-line')">
                   {{ $t('views.components_demo.show_success') }}
                 </button>
-                <button
-                  class="btn btn-error btn-sm"
-                  @click="showPush('views.components_demo.sample_error', '', 'alert-error', 'ri-close-line')"
-                >
+                <button class="btn btn-error btn-sm"
+                  @click="showPush('views.components_demo.sample_error', '', 'alert-error', 'ri-close-line')">
                   {{ $t('views.components_demo.show_error') }}
                 </button>
-                <button
-                  class="btn btn-warning btn-sm"
-                  @click="showPush('views.components_demo.sample_warning', '', 'alert-warning', 'ri-alert-line')"
-                >
+                <button class="btn btn-warning btn-sm"
+                  @click="showPush('views.components_demo.sample_warning', '', 'alert-warning', 'ri-alert-line')">
                   {{ $t('views.components_demo.show_warning') }}
                 </button>
-                <button
-                  class="btn btn-info btn-sm"
-                  @click="showPush('views.components_demo.sample_info', '', 'alert-info', 'ri-information-line')"
-                >
+                <button class="btn btn-info btn-sm"
+                  @click="showPush('views.components_demo.sample_info', '', 'alert-info', 'ri-information-line')">
                   {{ $t('views.components_demo.show_info') }}
                 </button>
               </div>
@@ -320,9 +309,8 @@ function copyCode(): void {
 
           <!-- Code Display -->
           <div class="bg-base-300 rounded-lg p-4 overflow-x-auto flex-1">
-            <pre
-              class="text-xs md:text-sm font-mono whitespace-pre-wrap break-word"
-            ><code>{{ components[selectedComponent]?.code }}</code></pre>
+            <pre class="text-xs md:text-sm font-mono whitespace-pre-wrap break-word"><code>{{
+              components[selectedComponent]?.code }}</code></pre>
           </div>
 
           <!-- Copy Button -->

@@ -25,6 +25,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_async_engine(str(DATABASE_URL), echo=False)
 
 
+def _resolve_field(old, new, rewrite: bool):
+    if rewrite:
+        return new if new is not None else old
+    return old if old is not None else new
+
+
 class DBError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
@@ -67,7 +73,7 @@ class Database:
             expire_on_commit=False,
             class_=AsyncSession,
         )
-
+    
     async def get_refresh_session(
         self, refresh_token: str = "", fingerprint: str = "", session_id: str = ""
     ) -> RefreshSession:
@@ -292,6 +298,7 @@ class Database:
         name: str | None,
         avatar_url: str | None,
         role="user",
+        rewrite=False
     ) -> tuple[User, bool]:
         async with self.async_session() as dbsession:
             res = await dbsession.execute(
@@ -300,24 +307,19 @@ class Database:
             user = res.scalar_one_or_none()
 
             if user:
-                vals = {
-                    "username": username or user.username,
-                    "name": name or user.name,
-                    "role": role or user.role,
-                    "avatar_url": avatar_url or user.avatar_url,
-                    "last_seen": datetime.now(),
-                }
+                user.username = _resolve_field(user.username, username, rewrite)
+                user.name = _resolve_field(user.name, name, rewrite)
+                user.avatar_url = _resolve_field(user.avatar_url, avatar_url, rewrite)
 
-                res = await dbsession.execute(
-                    update(User)
-                    .where(User.id == user.id)
-                    .values(**vals)
-                    .returning(User)
-                )
+                if rewrite and role:
+                    user.role = role
+
+                user.last_seen = datetime.now()
+
                 await dbsession.commit()
-                return res.scalar_one(), False
+                return user, False
 
-            if not any([username, name, avatar_url, role]):
+            if all(v is None for v in (username, name, avatar_url)):
                 raise NotEnoughValues("Not enough values to create object")
 
             res = await dbsession.execute(

@@ -148,10 +148,8 @@ onMounted(() => loadKeys())
     </div>
 
     <!-- Create button -->
-    <button
-      class="btn btn-soft btn-accent w-full py-6 flex items-center justify-center gap-2"
-      @click="openCreateDialog"
-    >
+    <button class="btn btn-soft btn-accent w-full py-6 flex items-center justify-center gap-2"
+      @click="openCreateDialog">
       <i class="ri-add-line text-xl"></i>
       <span class="font-semibold">{{ $t('views.api_keys.create') }}</span>
     </button>
@@ -174,19 +172,10 @@ onMounted(() => loadKeys())
         </div>
 
         <Menu v-else>
-          <MenuButton
-            v-for="k in keys"
-            :key="k.id"
-            :text="k.name"
-            icon="ri-key-2-line"
-            @click="openDrawer(k)"
-          >
+          <MenuButton v-for="k in keys" :key="k.id" :text="k.name" icon="ri-key-2-line" @click="openDrawer(k)">
             <template #content>
               <div class="w-full flex items-center gap-3">
-                <i
-                  class="ri-key-2-line text-2xl"
-                  :class="k.banned ? 'text-error opacity-50' : 'text-accent'"
-                ></i>
+                <i class="ri-key-2-line text-2xl" :class="k.banned ? 'text-error opacity-50' : 'text-accent'"></i>
                 <div class="flex-1 text-left">
                   <div class="font-medium" :class="{ 'line-through opacity-50': k.banned }">
                     {{ k.name }}
@@ -206,160 +195,128 @@ onMounted(() => loadKeys())
       </div>
     </template>
 
-    <!-- Key detail drawer -->
-    <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': drawerOpen }">
-      <div
-        class="modal-box p-0 bg-base-100 rounded-t-3xl sm:rounded-3xl border-t sm:border-t-0 border-base-300"
-      >
-        <div class="px-5 pt-5 pb-4 flex flex-col items-center text-center">
-          <div class="flex items-center gap-3 w-full mb-3">
-            <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-              :class="selectedKey?.banned ? 'bg-error/10 text-error' : 'bg-accent/10 text-accent'"
-            >
-              <i class="ri-key-2-line text-2xl"></i>
-            </div>
-            <div class="text-left flex-1 min-w-0">
-              <h3 class="text-lg font-bold leading-tight truncate">{{ selectedKey?.name }}</h3>
-              <p class="text-xs opacity-50 font-mono">sk_••••••••</p>
-            </div>
-            <span v-if="selectedKey?.banned" class="badge badge-error badge-sm shrink-0">
-              {{ $t('views.api_keys.banned_badge') }}
-            </span>
-          </div>
-
-          <div class="grid grid-cols-1 gap-2 w-full mb-4">
-            <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
-              <span class="text-xs opacity-60">{{ $t('views.api_keys.detail.created') }}</span>
-              <span class="text-xs font-medium">
-                {{ selectedKey ? formatDate(selectedKey.createdAt) : '' }}
+    <Teleport to="body">
+      <div class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': drawerOpen }">
+        <div class="modal-box p-0 bg-base-100 rounded-t-3xl sm:rounded-3xl border-t sm:border-t-0 border-base-300">
+          <div class="px-5 pt-5 pb-4 flex flex-col items-center text-center">
+            <div class="flex items-center gap-3 w-full mb-3">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                :class="selectedKey?.banned ? 'bg-error/10 text-error' : 'bg-accent/10 text-accent'">
+                <i class="ri-key-2-line text-2xl"></i>
+              </div>
+              <div class="text-left flex-1 min-w-0">
+                <h3 class="text-lg font-bold leading-tight truncate">{{ selectedKey?.name }}</h3>
+                <p class="text-xs opacity-50 font-mono">sk_••••••••</p>
+              </div>
+              <span v-if="selectedKey?.banned" class="badge badge-error badge-sm shrink-0">
+                {{ $t('views.api_keys.banned_badge') }}
               </span>
             </div>
-            <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
-              <span class="text-xs opacity-60">{{ $t('views.api_keys.detail.status') }}</span>
-              <span
-                class="text-xs font-medium"
-                :class="selectedKey?.banned ? 'text-error' : 'text-success'"
-              >
+
+            <div class="grid grid-cols-1 gap-2 w-full mb-4">
+              <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
+                <span class="text-xs opacity-60">{{ $t('views.api_keys.detail.created') }}</span>
+                <span class="text-xs font-medium">
+                  {{ selectedKey ? formatDate(selectedKey.createdAt) : '' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between px-3 py-2.5 bg-base-200 rounded-xl">
+                <span class="text-xs opacity-60">{{ $t('views.api_keys.detail.status') }}</span>
+                <span class="text-xs font-medium" :class="selectedKey?.banned ? 'text-error' : 'text-success'">
+                  {{
+                    selectedKey?.banned
+                      ? $t('views.api_keys.detail.disabled')
+                      : $t('views.api_keys.detail.active')
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 w-full">
+              <button class="btn rounded-xl" :class="selectedKey?.banned ? 'btn-success' : 'btn-warning'"
+                @click="toggleBan">
+                <i :class="selectedKey?.banned ? 'ri-lock-unlock-line' : 'ri-lock-line'"></i>
                 {{
                   selectedKey?.banned
-                    ? $t('views.api_keys.detail.disabled')
-                    : $t('views.api_keys.detail.active')
+                    ? $t('views.api_keys.detail.enable')
+                    : $t('views.api_keys.detail.disable')
                 }}
-              </span>
+              </button>
+              <button class="btn btn-error rounded-xl" @click="deleteKey">
+                <i class="ri-delete-bin-line"></i>
+                {{ $t('views.api_keys.detail.delete') }}
+              </button>
             </div>
           </div>
+        </div>
+        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeDrawer">
+          <button>close</button>
+        </form>
+      </div>
+    </Teleport>
 
-          <div class="grid grid-cols-2 gap-2 w-full">
-            <button
-              class="btn rounded-xl"
-              :class="selectedKey?.banned ? 'btn-success' : 'btn-warning'"
-              @click="toggleBan"
-            >
-              <i :class="selectedKey?.banned ? 'ri-lock-unlock-line' : 'ri-lock-line'"></i>
-              {{
-                selectedKey?.banned
-                  ? $t('views.api_keys.detail.enable')
-                  : $t('views.api_keys.detail.disable')
-              }}
+    <Teleport to="body">
+      <div class="modal" :class="{ 'modal-open': showCreateDialog }">
+        <div class="modal-box max-w-sm">
+          <h3 class="font-bold text-lg mb-1">{{ $t('views.api_keys.create_dialog.title') }}</h3>
+          <p class="text-sm opacity-60 mb-5">{{ $t('views.api_keys.create_dialog.hint') }}</p>
+
+          <div class="flex flex-col gap-3">
+            <label class="input input-bordered w-full flex items-center gap-2">
+              <i class="ri-price-tag-3-line opacity-50"></i>
+              <input v-model="newKeyName" type="text" class="grow"
+                :placeholder="$t('views.api_keys.create_dialog.placeholder')" maxlength="30" @keyup.enter="createKey" />
+            </label>
+            <button class="btn btn-primary w-full" :disabled="!newKeyName.trim() || isCreating" @click="createKey">
+              <span v-if="isCreating" class="loading loading-spinner loading-sm"></span>
+              <i v-else class="ri-add-line"></i>
+              {{ $t('views.api_keys.create') }}
             </button>
-            <button class="btn btn-error rounded-xl" @click="deleteKey">
-              <i class="ri-delete-bin-line"></i>
-              {{ $t('views.api_keys.detail.delete') }}
+          </div>
+
+          <div class="modal-action mt-3">
+            <button class="btn btn-ghost w-full" @click="closeCreateDialog">
+              {{ $t('views.api_keys.close') }}
             </button>
           </div>
         </div>
+        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeCreateDialog">
+          <button>close</button>
+        </form>
       </div>
-      <form
-        method="dialog"
-        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
-        @click="closeDrawer"
-      >
-        <button>close</button>
-      </form>
-    </div>
+    </Teleport>
 
-    <!-- Create dialog -->
-    <div class="modal" :class="{ 'modal-open': showCreateDialog }">
-      <div class="modal-box max-w-sm">
-        <h3 class="font-bold text-lg mb-1">{{ $t('views.api_keys.create_dialog.title') }}</h3>
-        <p class="text-sm opacity-60 mb-5">{{ $t('views.api_keys.create_dialog.hint') }}</p>
+    <Teleport to="body">
+      <div class="modal" :class="{ 'modal-open': showRevealDialog }">
+        <div class="modal-box max-w-sm">
+          <div class="flex flex-col items-center text-center">
+            <div class="w-16 h-16 mb-4 rounded-2xl bg-success/10 flex items-center justify-center text-success">
+              <i class="ri-check-double-line text-4xl"></i>
+            </div>
 
-        <div class="flex flex-col gap-3">
-          <label class="input input-bordered w-full flex items-center gap-2">
-            <i class="ri-price-tag-3-line opacity-50"></i>
-            <input
-              v-model="newKeyName"
-              type="text"
-              class="grow"
-              :placeholder="$t('views.api_keys.create_dialog.placeholder')"
-              maxlength="30"
-              @keyup.enter="createKey"
-            />
-          </label>
-          <button
-            class="btn btn-primary w-full"
-            :disabled="!newKeyName.trim() || isCreating"
-            @click="createKey"
-          >
-            <span v-if="isCreating" class="loading loading-spinner loading-sm"></span>
-            <i v-else class="ri-add-line"></i>
-            {{ $t('views.api_keys.create') }}
-          </button>
-        </div>
+            <h3 class="font-bold text-lg mb-1">{{ $t('views.api_keys.reveal.title') }}</h3>
+            <p class="text-sm opacity-60 mb-5">{{ $t('views.api_keys.reveal.hint') }}</p>
 
-        <div class="modal-action mt-3">
-          <button class="btn btn-ghost w-full" @click="closeCreateDialog">
-            {{ $t('views.api_keys.close') }}
-          </button>
-        </div>
-      </div>
-      <form
-        method="dialog"
-        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
-        @click="closeCreateDialog"
-      >
-        <button>close</button>
-      </form>
-    </div>
+            <div
+              class="w-full p-4 bg-base-200 rounded-2xl font-mono text-sm break-all text-left select-all cursor-pointer mb-4"
+              @click="copyKey">
+              {{ revealedKey }}
+            </div>
 
-    <!-- Reveal key dialog -->
-    <div class="modal" :class="{ 'modal-open': showRevealDialog }">
-      <div class="modal-box max-w-sm">
-        <div class="flex flex-col items-center text-center">
-          <div
-            class="w-16 h-16 mb-4 rounded-2xl bg-success/10 flex items-center justify-center text-success"
-          >
-            <i class="ri-check-double-line text-4xl"></i>
+            <button class="btn btn-soft btn-accent w-full gap-2 mb-2" @click="copyKey">
+              <i :class="copied ? 'ri-check-line' : 'ri-file-copy-line'"></i>
+              {{ copied ? $t('views.api_keys.reveal.copied') : $t('views.api_keys.reveal.copy') }}
+            </button>
+
+            <button class="btn btn-ghost w-full" @click="closeRevealDialog">
+              {{ $t('views.api_keys.close') }}
+            </button>
           </div>
-
-          <h3 class="font-bold text-lg mb-1">{{ $t('views.api_keys.reveal.title') }}</h3>
-          <p class="text-sm opacity-60 mb-5">{{ $t('views.api_keys.reveal.hint') }}</p>
-
-          <div
-            class="w-full p-4 bg-base-200 rounded-2xl font-mono text-sm break-all text-left select-all cursor-pointer mb-4"
-            @click="copyKey"
-          >
-            {{ revealedKey }}
-          </div>
-
-          <button class="btn btn-soft btn-accent w-full gap-2 mb-2" @click="copyKey">
-            <i :class="copied ? 'ri-check-line' : 'ri-file-copy-line'"></i>
-            {{ copied ? $t('views.api_keys.reveal.copied') : $t('views.api_keys.reveal.copy') }}
-          </button>
-
-          <button class="btn btn-ghost w-full" @click="closeRevealDialog">
-            {{ $t('views.api_keys.close') }}
-          </button>
         </div>
+        <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-[2px]" @click="closeRevealDialog">
+          <button>close</button>
+        </form>
       </div>
-      <form
-        method="dialog"
-        class="modal-backdrop bg-black/40 backdrop-blur-[2px]"
-        @click="closeRevealDialog"
-      >
-        <button>close</button>
-      </form>
-    </div>
+    </Teleport>
   </div>
 </template>

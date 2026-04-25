@@ -211,9 +211,13 @@ const confirmUnlinkAccount = async () => {
 
     <Menu header="views.settings.main" v-if="authStatus">
       <MenuButton :text="$t('views.settings.devices')" icon="ri-smartphone-line"
-        @click="$router.push('/menu/settings/devices')" />
+        @click="$router.push('/menu/settings/devices')">
+        <i class="ri-arrow-right-s-line text-xl opacity-50"></i>
+      </MenuButton>
       <MenuButton :text="$t('views.settings.api_keys')" icon="ri-key-2-line"
-        @click="$router.push('/menu/settings/apikey')" />
+        @click="$router.push('/menu/settings/apikey')">
+        <i class="ri-arrow-right-s-line text-xl opacity-50"></i>
+      </MenuButton>
     </Menu>
 
     <Menu header="views.account.linked_accounts" v-if="authStatus">
@@ -233,17 +237,18 @@ const confirmUnlinkAccount = async () => {
                 </div>
               </div>
             </div>
-
-            <button v-if="linkedAccounts.telegram" class="btn btn-sm btn-outline btn-error" :disabled="isLinking"
-              @click="unlinkAccount('telegram')">
-              <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.unlink') }}</span>
-            </button>
-            <button v-else class="btn btn-sm btn-primary" :disabled="isLinking" @click="linkTelegram">
-              <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.link') }}</span>
-            </button>
           </div>
+        </template>
+        <template #default>
+          <button v-if="linkedAccounts.telegram" class="btn btn-sm btn-outline btn-error" :disabled="isLinking"
+            @click="unlinkAccount('telegram')">
+            <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
+            <span v-else>{{ $t('actions.unlink') }}</span>
+          </button>
+          <button v-else class="btn btn-sm btn-primary" :disabled="isLinking" @click="linkTelegram">
+            <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
+            <span v-else>{{ $t('actions.link') }}</span>
+          </button>
         </template>
       </MenuCard>
       <MenuCard>
@@ -262,26 +267,30 @@ const confirmUnlinkAccount = async () => {
                 </div>
               </div>
             </div>
-
-            <button v-if="linkedAccounts.yandex" class="btn btn-sm btn-outline btn-error" :disabled="isLinking"
-              @click="unlinkAccount('yandex')">
-              <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.unlink') }}</span>
-            </button>
-            <button v-else class="btn btn-sm btn-primary" :disabled="isLinking" @click="linkYandex">
-              <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
-              <span v-else>{{ $t('actions.link') }}</span>
-            </button>
           </div>
+        </template>
+        <template #default>
+          <button v-if="linkedAccounts.yandex" class="btn btn-sm btn-outline btn-error" :disabled="isLinking"
+            @click="unlinkAccount('yandex')">
+            <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
+            <span v-else>{{ $t('actions.unlink') }}</span>
+          </button>
+          <button v-else class="btn btn-sm btn-primary" :disabled="isLinking" @click="linkYandex">
+            <span v-if="isLinking" class="loading loading-spinner loading-sm"></span>
+            <span v-else>{{ $t('actions.link') }}</span>
+          </button>
         </template>
       </MenuCard>
     </Menu>
 
     <Menu header="views.settings.danger" v-if="authStatus">
       <MenuButton @click="$router.push('/recovery')" icon="ri-shield-keyhole-line"
-        :text="$t('views.settings.account_recovery')" />
+        :text="$t('views.settings.account_recovery')">
+        <i class="ri-arrow-right-s-line text-xl opacity-50"></i>
+      </MenuButton>
       <MenuButton @click="deleteAccount" icon="ri-delete-bin-line" :text="$t('actions.delete_account')">
         <span v-if="isDeleting" class="loading loading-spinner loading-sm"></span>
+        <i v-else class="ri-arrow-right-s-line text-xl opacity-50"></i>
       </MenuButton>
       <MenuButton v-if="!isTgEnv" @click="logout" text="views.settings.logout" icon="ri-logout-box-line">
         <i class="ri-arrow-right-s-line text-xl opacity-50"></i>

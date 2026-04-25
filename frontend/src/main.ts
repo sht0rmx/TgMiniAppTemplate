@@ -11,9 +11,9 @@ import { authInit } from '@/utils/auth.ts'
 import { checkTg } from '@/utils/providers/telegram'
 import { handleError } from '@/utils/help.ts'
 
-if (import.meta.env.DEV) {
-  import('eruda').then((eruda) => eruda.default.init())
-}
+//if (import.meta.env.DEV) {
+//  import('eruda').then((eruda) => eruda.default.init())
+//}
 
 export let isTgEnv: Ref<boolean> = ref(false)
 export let isLoading: Ref<boolean> = ref(true)

@@ -261,10 +261,8 @@ onBeforeUnmount(() => stopQR())
         </div>
       </div>
     </div>
-    <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
-      <button class="btn btn-ghost btn-sm" @click="$router.push('/')">
-        <span class="tracking-widest">{{ $t('views.auth.skip_login') }}</span>
-      </button>
-    </footer>
+    <button class="btn btn-ghost btn-sm p-4 m-3 rounded-box" @click="$router.push('/')">
+      <span class="tracking-widest">{{ $t('views.auth.skip_login') }}</span>
+    </button>
   </div>
 </template>

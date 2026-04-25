@@ -28,11 +28,6 @@ def parse_expire(date: str) -> timedelta:
 
 
 def is_date_expired(created, expire_delta: str) -> bool:
-    print(f"Created: {created}")
-    print(f"Expire delta: {expire_delta}")
-    print(f"Now: {datetime.now()}")
-    print(f"Expire: {created + parse_expire(expire_delta)}")
-    print(f"Is expired: {datetime.now() > created + parse_expire(expire_delta)}")
     return datetime.now() > created + parse_expire(expire_delta)
 
 

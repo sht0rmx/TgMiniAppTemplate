@@ -7,12 +7,12 @@ export const themes = [
     icon: 'ri-computer-line',
   },
   {
-    id: 'simple',
+    id: 'simple-light',
     labelKey: 'app.ui.light',
     icon: 'ri-sun-line',
   },
   {
-    id: 'dim',
+    id: 'simple-dark',
     labelKey: 'app.ui.dark',
     icon: 'ri-moon-line',
   },
@@ -21,8 +21,8 @@ export const themes = [
 export type Theme = (typeof themes)[number]['id']
 
 const STORAGE_KEY = 'theme'
-const DARK_THEME: Theme = 'dim'
-const LIGHT_THEME: Theme = 'simple'
+const DARK_THEME: Theme = 'simple-dark'
+const LIGHT_THEME: Theme = 'simple-light'
 
 export const currentTheme: Ref<Theme> = ref('system')
 

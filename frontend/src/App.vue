@@ -39,9 +39,11 @@ const pendingLink = ref<{ method: string; payload: any } | null>(null)
 
 
 const containerClasses = computed(() => [
-  'flex flex-col min-h-screen bg-base-300 overflow-hidden',
+  'flex flex-col min-h-screen bg-base-200 overflow-hidden',
   { 'blur-sm': lockPage.value },
-  { 'pb-15': !hiddenNav.value },
+  !hiddenNav.value
+    ? 'pb-[calc(3.75rem+var(--tg-safe-area-inset-bottom,0px))]'
+    : 'pb-[var(--tg-safe-area-inset-bottom,0px)]'
 ])
 
 const mainClasses = computed(() => [
@@ -204,7 +206,6 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-top: calc(var(--tg-safe-area-inset-top, 0px));
   overflow: hidden;
 }
 
