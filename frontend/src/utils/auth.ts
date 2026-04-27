@@ -15,6 +15,14 @@ export async function authInit(): Promise<boolean> {
   }
 
   let ac = apiClient.getAccessToken()
+  if (!ac) {
+    try {
+      const refreshed = await apiClient.refreshTokens()
+      if (refreshed) {
+        ac = apiClient.getAccessToken()
+      }
+    } catch { }
+  }
 
   if (ac) {
     return await AuthService.check()

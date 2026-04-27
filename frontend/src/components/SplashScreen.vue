@@ -1,17 +1,19 @@
 <template>
-  <div class="w-full h-full bg-base-200">
+  <div class="w-full h-full bg-base-100 z-90">
     <transition name="fade">
       <div id="splash" aria-hidden="true"
         class="bg-background/95 flex flex-col items-center justify-center gap-4 relative">
-        <svg aria-label="logo" class="logo" role="img" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
-          fill="none">
+        <svg aria-label="logo" class="logo" role="img" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.1" />
-              <stop offset="50%" stop-color="#a3a0a0" stop-opacity="0.25" />
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1" />
-              <animateTransform attributeName="gradientTransform" type="translate" dur="2s" repeatCount="indefinite"
-                values="-1 0; 1 0" keyTimes="0; 1" calcMode="spline" keySplines="0.32 0 0.68 1" />
+              <stop offset="0%" stop-color="var(--color-base-content)" stop-opacity="0.2" />
+
+              <stop offset="50%" stop-color="var(--color-base-content)" stop-opacity="0.3" />
+
+              <stop offset="100%" stop-color="var(--color-base-content)" stop-opacity="0.2" />
+
+              <animateTransform attributeName="gradientTransform" type="translate" dur="3s" repeatCount="indefinite"
+                values="-1 0; 1 0" keyTimes="0; 1" calcMode="spline" keySplines="0.4 0 0.2 1" />
             </linearGradient>
           </defs>
           <path

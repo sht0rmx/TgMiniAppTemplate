@@ -186,21 +186,14 @@ async function startLogin() {
     redirect_to = '/'
   }
 
-  const oauthCode = queryStringParam(route.query.code)
-  if (oauthCode) {
-    await handleYandexOAuth(oauthCode, queryStringParam(route.query.state))
-    return
-  }
-
   let res = false
 
   try {
     res = await apiClient.refreshTokens()
-  } catch {
-    null
-  }
-
-  if (res) {
+  } catch { null } if (res && queryStringParam(route.query.code) && queryStringParam(route.query.state)) {
+    await handleYandexOAuth(queryStringParam(route.query.code), queryStringParam(route.query.state))
+    return
+  } else if (res) {
     await successPush()
   } else if (isTgEnv.value) {
     if (await LoginTg()) {
