@@ -4,7 +4,7 @@ from pathlib import Path
 
 from app.middleware.spam import rate_limit
 from app.services.caching import cache
-from backend.app.utils.translations import LANGUAGE_NAMES
+from app.utils.translations import LANGUAGE_NAMES
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 

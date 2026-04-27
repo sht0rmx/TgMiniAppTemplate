@@ -31,23 +31,17 @@ def is_date_expired(created, expire_delta: str) -> bool:
     return datetime.now() > created + parse_expire(expire_delta)
 
 
-
-def create_hash(key_name: str, msg: str, from_env: bool = True) -> str:
+def create_hash(key: str | bytes, msg: str, from_env: bool = True, hex: bool = True) -> str | bytes:
     if from_env:
-        raw_key = os.getenv(key_name)
+        raw_key = os.getenv(str(key))
         if not raw_key:
-            raise ValueError(f"Environment variable '{key_name}' is missing or empty.")
+            raise ValueError(f"Environment variable '{key}' is missing or empty.")
         k = raw_key.encode()
     else:
-        k = key_name.encode() if isinstance(key_name, str) else key_name
+        k = key.encode() if isinstance(key, str) else key
 
     h = hmac.new(k, msg.encode(), hashlib.sha256)
-    return h.hexdigest()
-
-
-def verify_hash(provided_hash: str, key_name: str, msg: str) -> bool:
-    expected_hash = create_hash(key_name, msg)
-    return hmac.compare_digest(expected_hash, provided_hash)
+    return h.hexdigest() if hex else h.digest()
 
 
 def gen_code(length=16):

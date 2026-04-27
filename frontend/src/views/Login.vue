@@ -186,23 +186,35 @@ async function startLogin() {
     redirect_to = '/'
   }
 
-  let res = false
+  let isAuthenticated = false;
 
   try {
-    res = await apiClient.refreshTokens()
-  } catch { null } if (res && queryStringParam(route.query.code) && queryStringParam(route.query.state)) {
-    await handleYandexOAuth(queryStringParam(route.query.code), queryStringParam(route.query.state))
-    return
-  } else if (res) {
-    await successPush()
-  } else if (isTgEnv.value) {
-    if (await LoginTg()) {
-      await successPush()
+    isAuthenticated = await apiClient.refreshTokens();
+  } catch (error) {
+    isAuthenticated = false;
+  }
+
+  if (isAuthenticated) {
+    const code = queryStringParam(route.query.code);
+    const state = queryStringParam(route.query.state);
+
+    if (code && state) {
+      await handleYandexOAuth(code, state);
     } else {
-      showPush('views.auth.miniapp_error', '', 'alert-warning', 'ri-error-warning-line')
+      await successPush();
+    }
+    return;
+  }
+  if (isTgEnv.value) {
+    const tgSuccess = await LoginTg();
+
+    if (tgSuccess) {
+      await successPush();
+    } else {
+      showPush('views.auth.miniapp_error', '', 'alert-warning', 'ri-error-warning-line');
     }
   } else {
-    await startQR()
+    await startQR();
   }
 }
 

@@ -1,3 +1,4 @@
+import hmac
 import os
 import uuid
 from datetime import datetime
@@ -31,22 +32,28 @@ class AuthUtils:
         )
 
     @staticmethod
-    def check_initdata(initdata: str, hash_str: str, c_str: str = "WebAppData") -> bool:
-        bot_token = os.getenv("BOT_TOKEN")
-        if not bot_token:
+    def check_initdata(initdata: str, hash_str: str) -> bool:
+        token = os.getenv("BOT_TOKEN")
+        if not token:
             return False
-        init_data = sorted(
+
+        idl = sorted(
             [
                 chunk.split("=", 1)
                 for chunk in unquote(initdata).split("&")
-                if chunk[: len("hash=")] != "hash="
+                if not chunk.startswith("hash=")
             ],
             key=lambda x: x[0],
         )
-        init_data = "\n".join([f"{rec[0]}={rec[1]}" for rec in init_data])
-        prehash = create_hash(c_str, bot_token, from_env=False, hex=False)
-        new_hash = create_hash(prehash, init_data, from_env=False)
-        return hash_str == new_hash
+        dcs = "\n".join([f"{k}={v}" for k, v in idl])
+
+        secret_key = create_hash(key="WebAppData", msg=token, from_env=False, hex=False)
+        created_hash = create_hash(key=secret_key, msg=dcs, from_env=False, hex=True)
+
+        if isinstance(created_hash, str):
+            return hmac.compare_digest(created_hash, hash_str)
+
+        return False
 
 
 class AuthService:

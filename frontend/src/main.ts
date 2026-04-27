@@ -11,9 +11,9 @@ import { authInit } from '@/utils/auth.ts'
 import { checkTg } from '@/utils/providers/telegram'
 import { handleError } from '@/utils/help.ts'
 
-//if (import.meta.env.DEV) {
-//  import('eruda').then((eruda) => eruda.default.init())
-//}
+if (import.meta.env.DEV) {
+  import('eruda').then((eruda) => eruda.default.init())
+}
 
 export let isTgEnv: Ref<boolean> = ref(false)
 export let isLoading: Ref<boolean> = ref(true)
@@ -47,7 +47,6 @@ export const nav_items = [
 const initApp = async () => {
   authStatus.value = await authInit()
   await initializeLocale()
-  checkTg()
 }
 
 const app = createApp(App)
@@ -72,6 +71,7 @@ window.addEventListener('error', (event) => {
 })
 
 setTheme()
+checkTg()
 app.mount('#app')
 await initApp().then(() => {
   if (!technicalWork && !unableAccessApi.value) {
