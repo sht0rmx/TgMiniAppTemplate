@@ -83,7 +83,10 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
         )
         return JSONResponse({"detail": "uploaded"}, status_code=201)
     except Exception as e:
-        return JSONResponse({"detail": str(e)}, status_code=500)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred"}
+        )
 
 
 @router.get(
@@ -101,7 +104,6 @@ async def download_file(request: Request, file_id: str):
         if not t:
             return JSONResponse({"detail": "404"}, 404)
 
-        # Получаем данные целиком
         d = await db_client.get_file(file_id=file_id, key="")
         s = len(d)
         name = t.display_name
@@ -128,7 +130,10 @@ async def download_file(request: Request, file_id: str):
     except NotFound:
         return JSONResponse({"detail": "404"}, 404)
     except Exception as e:
-        return JSONResponse({"detail": str(e)}, 500)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred"}
+        )
     
     
 @router.delete(
@@ -141,7 +146,6 @@ async def delete_file(request: Request, file_id: str):
         return JSONResponse({"detail": "Missing user_id"}, status_code=400)
 
     try:
-        # Verify ownership
         files = await db_client.get_files(user_id=user_id)
         target = next((f for f in files if str(f.id) == file_id), None)
         if not target:

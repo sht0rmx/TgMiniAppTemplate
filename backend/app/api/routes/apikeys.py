@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from app.database.database import Banned, NotFound, db_client
-from app.middleware.auth import deny_bot, require_auth
+from app.middleware.auth import deny_bot
 from app.schemas.models import CreateApiKeyRequest
+from sqlalchemy import select
+from app.database.models.ApiKeys import ApiKey
 
 router = APIRouter(prefix="/apikeys", tags=["API Keys"])
 
@@ -60,7 +62,10 @@ async def create_api_key(request: Request, body: CreateApiKeyRequest):
             user_id=user_id, name=name, api_key=raw_key
         )
     except ValueError as e:
-        return JSONResponse({"detail": str(e)}, status_code=400)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred"}
+        )
 
     return JSONResponse(
         {"detail": "created", "key": raw_key, "name": name}, status_code=201
@@ -102,18 +107,13 @@ async def toggle_ban_api_key(request: Request, key_id: str):
     except NotFound:
         return JSONResponse({"detail": "API key not found"}, status_code=404)
     except Banned:
-        # key is banned — we still need to access it to unban
         pass
-
-    # re-fetch without ban check to get the actual object
-    from sqlalchemy import select
-    from app.database.models.ApiKeys import ApiKey
 
     async with db_client.async_session() as dbsession:
         result = await dbsession.execute(
             select(ApiKey).where(ApiKey.id == key_id)
         )
-        key = result.scalar_one_or_none()
+    key = result.scalar_one_or_none()
 
     if not key:
         return JSONResponse({"detail": "API key not found"}, status_code=404)
