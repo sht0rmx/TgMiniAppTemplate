@@ -473,7 +473,15 @@ class Database:
             if not api_key.startswith("sk_"):
                 raise ValueError("Api key must starts with `sk_`")
 
-            key_hash = create_hash("API_SECRET", api_key)
+            api_secret = os.getenv("API_SECRET")
+            if not api_secret:
+                raise ValueError("Environment variable 'API_SECRET' is missing or empty.")
+            key_hash = hashlib.pbkdf2_hmac(
+                "sha256",
+                api_key.encode(),
+                api_secret.encode(),
+                310000,
+            ).hex()
 
             await dbsession.execute(
                 insert(ApiKey).values(user_id=user_id, name=name, api_key_hash=key_hash)
