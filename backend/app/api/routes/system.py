@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from app.middleware.spam import rate_limit
@@ -14,8 +15,13 @@ LOCALES_DIR = Path("/app/data/locales")
 
 
 def get_locale_file(locale: str) -> Path:
-    safe_locale = Path(locale).name 
-    locale_file = (LOCALES_DIR / f"{safe_locale}.json").resolve()
+    normalized_locale = locale.split("-")[0].lower()
+    if not re.fullmatch(r"[a-z]{2,10}", normalized_locale):
+        raise HTTPException(status_code=400, detail="Invalid locale")
+    if normalized_locale not in LANGUAGE_NAMES:
+        raise HTTPException(status_code=400, detail="Language not supported")
+
+    locale_file = (LOCALES_DIR / f"{normalized_locale}.json").resolve()
 
     if not locale_file.is_relative_to(LOCALES_DIR.resolve()):
         raise HTTPException(status_code=400, detail="Invalid locale path")
