@@ -14,6 +14,10 @@ router = APIRouter(prefix="/languages", tags=["system"])
 LOCALES_DIR = Path("/app/data/locales")
 
 
+def _locale_files_map() -> dict[str, Path]:
+    return {file.stem.lower(): file.resolve() for file in LOCALES_DIR.glob("*.json") if file.is_file()}
+
+
 def get_locale_file(locale: str) -> Path:
     normalized_locale = locale.split("-")[0].lower()
     if not re.fullmatch(r"[a-z]{2,10}", normalized_locale):
@@ -21,10 +25,10 @@ def get_locale_file(locale: str) -> Path:
     if normalized_locale not in LANGUAGE_NAMES:
         raise HTTPException(status_code=400, detail="Language not supported")
 
-    locale_file = (LOCALES_DIR / f"{normalized_locale}.json").resolve()
-
-    if not locale_file.is_relative_to(LOCALES_DIR.resolve()):
-        raise HTTPException(status_code=400, detail="Invalid locale path")
+    locale_files = _locale_files_map()
+    locale_file = locale_files.get(normalized_locale)
+    if locale_file is None:
+        raise HTTPException(status_code=404, detail="Locale not found")
 
     if not locale_file.exists() or not locale_file.is_file():
         raise HTTPException(status_code=404, detail="Locale not found")
