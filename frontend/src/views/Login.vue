@@ -187,25 +187,19 @@ async function startLogin() {
   }
 
   let isAuthenticated = false;
+  const code = queryStringParam(route.query.code);
+  const state = queryStringParam(route.query.state);
 
   try {
     isAuthenticated = await apiClient.refreshTokens();
   } catch (error) {
     isAuthenticated = false;
   }
-
   if (isAuthenticated) {
-    const code = queryStringParam(route.query.code);
-    const state = queryStringParam(route.query.state);
-
-    if (code && state) {
-      await handleYandexOAuth(code, state);
-    } else {
-      await successPush();
-    }
-    return;
+    await successPush()
+    return
   }
-  if (isTgEnv.value) {
+  else if (isTgEnv.value) {
     const tgSuccess = await LoginTg();
 
     if (tgSuccess) {
@@ -213,6 +207,8 @@ async function startLogin() {
     } else {
       showPush('views.auth.miniapp_error', '', 'alert-warning', 'ri-error-warning-line');
     }
+  } else if (code && state) {
+    await handleYandexOAuth(code, state);
   } else {
     await startQR();
   }
