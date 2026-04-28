@@ -8,7 +8,7 @@ defineProps({
 
 <template>
   <div>
-    <div ref="headerRef"
+    <div v-if="title" ref="headerRef"
       class="fixed flex flex-row left-0 right-0 z-50 header-box backdrop-blur-2xl transition-all duration-100" :class="isTgEnv
         ? 'top-[calc(var(--tg-safe-area-inset-top,0px)*-1+2.8rem)]'
         : 'top-0'">
