@@ -13,6 +13,7 @@ const getErrorMessage = (err: unknown): string => {
 export const handleError = (err: unknown, type: string) => {
   const errorMessage = getErrorMessage(err)
   console.error(`[${type}]`, err)
+
   showPush('app.error', { error: errorMessage }, 'alert-warning', 'ri-error-warning-line')
   if (type === 'Unhandled Promise Rejection') {
     console.error('Unhandled Promise Rejection:', err)

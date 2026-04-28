@@ -195,7 +195,10 @@ async function startLogin() {
   } catch (error) {
     isAuthenticated = false;
   }
-  if (isAuthenticated) {
+  if (code && state) {
+    await handleYandexOAuth(code, state);
+  }
+  else if (isAuthenticated) {
     await successPush()
     return
   }
@@ -207,8 +210,6 @@ async function startLogin() {
     } else {
       showPush('views.auth.miniapp_error', '', 'alert-warning', 'ri-error-warning-line');
     }
-  } else if (code && state) {
-    await handleYandexOAuth(code, state);
   } else {
     await startQR();
   }
