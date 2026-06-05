@@ -4,8 +4,8 @@ import Header from '@/components/Header.vue';
 </script>
 
 <template>
-  <Header />
-  <div class="flex flex-col items-center justify-center space-y-3">
+  <Header class="lg:hidden" />
+  <div class="lg:h-full flex flex-col items-center justify-center space-y-3">
     <i class="ri-drop-line text-accent text-8xl"></i>
     <h1 class="font-bold text-3xl">{{ $t('views.home.title') }}</h1>
     <p class="text-center max-w-lg opacity-70">

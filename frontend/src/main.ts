@@ -45,8 +45,8 @@ export const nav_items = [
 ]
 
 const initApp = async () => {
-  authStatus.value = await authInit()
   await initializeLocale()
+  authStatus.value = await authInit()
 }
 
 const app = createApp(App)

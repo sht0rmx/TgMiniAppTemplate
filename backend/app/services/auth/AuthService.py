@@ -1,10 +1,10 @@
+import jwt
 import hmac
 import os
 import uuid
 from datetime import datetime
 from urllib.parse import unquote
 
-import jwt
 from fastapi.responses import JSONResponse
 
 from app.api.routes.auth.sse.manager import sse_manager
